@@ -8,7 +8,6 @@ const url = 'http://test.local';
 nock.disableNetConnect();
 
 describe('retry-axios', () => {
-
   let interceptorId: number|null;
 
   afterEach(() => {
@@ -105,5 +104,4 @@ describe('retry-axios', () => {
       assert.equal(undefined, rax.getConfig(e));
     }
   });
-
 });
