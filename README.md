@@ -42,14 +42,21 @@ const interceptorId = rax.attach(myAxiosInstance);
 const res = await myAxiosInstance.get('https://test.local');
 ```
 
-You can control the number of retries and backoff delay:
+You have a lot of options...
 
 ```js
 const interceptorId = rax.attach();
 const res = await axios({
   url: 'https://test.local',
-  retry: 14,        // Retry 14 times before giving up
-  retryDelay: 200,  // # milliseconds to delay at first
+  raxConfig: {
+    // Retry 14 times before giving up.  Defaults to 3.
+    retry: 14,
+    // Milliseconds to delay at first.  Defaults to 100.
+    retryDelay: 200,
+    // # HTTP methods to automatically retry.  Defaults to
+    // GET, HEAD, OPTIONS, DELETE, PUT
+    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS']
+  }
 });
 ```
 

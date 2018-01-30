@@ -29,6 +29,10 @@ describe('retry-axios', () => {
       assert.equal(config!.retry, 3);
       assert.equal(config!.retryDelay, 100);
       assert.equal(config!.instance, axios);
+      const expectedMethods = ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
+      for (const method of config!.httpMethodsToRetry!) {
+        assert(expectedMethods.indexOf(method) > -1);
+      }
     }
   });
 

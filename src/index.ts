@@ -5,6 +5,7 @@ export interface RetryConfig {
   currentRetryAttempt?: number;
   retryDelay?: number;
   instance?: AxiosInstance;
+  httpMethodsToRetry?: string[];
 }
 
 export type RaxConfig = {
@@ -43,14 +44,17 @@ function onError(err: AxiosError) {
       (config.retry === undefined || config.retry === null) ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
+  config.httpMethodsToRetry =
+      config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
 
   // If there's no config, or retries are disabled, return.
   if (!config || config.retry === 0) {
     return Promise.reject(err);
   }
 
-  // If this was anything other than a GET, return.
-  if (!err.config.method || err.config.method.toLowerCase() !== 'get') {
+  // Only retry with configured HttpMethods.
+  if (!err.config.method ||
+      config.httpMethodsToRetry.indexOf(err.config.method.toUpperCase()) < 0) {
     return Promise.reject(err);
   }
 
