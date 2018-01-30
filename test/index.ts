@@ -104,4 +104,17 @@ describe('retry-axios', () => {
       assert.equal(undefined, rax.getConfig(e));
     }
   });
+
+  it('should not retry if retries set to 0', async () => {
+    nock(url).get('/').reply(500);
+    interceptorId = rax.attach();
+    try {
+      const cfg: rax.RaxConfig = {url, raxConfig: {retry: 0}};
+      await axios(cfg);
+      assert.fail('Expected to throw');
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.equal(0, cfg!.currentRetryAttempt);
+    }
+  });
 });

@@ -39,7 +39,8 @@ function onFulfilled(res: AxiosResponse) {
 function onError(err: AxiosError) {
   const config = (err.config as RaxConfig).raxConfig || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
-  config.retry = config.retry || 3;
+  config.retry =
+      (config.retry === undefined || config.retry === null) ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
 
@@ -85,18 +86,16 @@ function onError(err: AxiosError) {
     return Promise.reject(err);
   }
 
-  // Calculate time to wait with exponential backoff. Formula: (2^c - 1 / 2) *
-  // 1000
-  const backOffDelay = config.retryDelay ?
-      ((1 / 2) * (Math.pow(2, config.currentRetryAttempt) - 1)) * 1000 :
-      1;
+  // Calculate time to wait with exponential backoff.
+  // Formula: (2^c - 1 / 2) * 1000
+  const delay = (Math.pow(2, config.currentRetryAttempt) - 1) / 2 * 1000;
 
   // We're going to retry!  Incremenent the counter.
   config.currentRetryAttempt += 1;
 
   // Create a promise that invokes the retry after the backOffDelay
   const backoff = new Promise(resolve => {
-    setTimeout(resolve, backOffDelay);
+    setTimeout(resolve, delay);
   });
 
   // Return the promise in which recalls axios to retry the request
