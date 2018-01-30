@@ -1,11 +1,37 @@
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
 
 export interface RetryConfig {
+  /**
+   * The number of times to retry the request.  Defaults to 3.
+   */
   retry?: number;
+
+  /**
+   * The number of retries already attempted.
+   */
   currentRetryAttempt?: number;
+
+  /**
+   * The amount of time to initially delay the retry.  Defaults to 100.
+   */
   retryDelay?: number;
+
+  /**
+   * The instance of the axios object to which the interceptor is attached.
+   */
   instance?: AxiosInstance;
+
+  /**
+   * The HTTP Methods that will be automatically retried.
+   * Defaults to ['GET','PUT','HEAD','OPTIONS','DELETE']
+   */
   httpMethodsToRetry?: string[];
+
+  /**
+   * The HTTP response status codes that will automatically be retried.
+   * Defaults to: [[100, 199], [429, 429], [500, 599]]
+   */
+  statusCodesToRetry?: number[][];
 }
 
 export type RaxConfig = {
@@ -47,6 +73,20 @@ function onError(err: AxiosError) {
   config.httpMethodsToRetry =
       config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
 
+  // If this wasn't in the list of status codes where we want
+  // to automatically retry, return.
+  const retryRanges = [
+    // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+    // 1xx - Retry (Informational, request still processing)
+    // 2xx - Do not retry (Success)
+    // 3xx - Do not retry (Redirect)
+    // 4xx - Do not retry (Client errors)
+    // 429 - Retry ("Too Many Requests")
+    // 5xx - Retry (Server errors)
+    [100, 199], [429, 429], [500, 599]
+  ];
+  config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
+
   // If there's no config, or retries are disabled, return.
   if (!config || config.retry === 0) {
     return Promise.reject(err);
@@ -60,16 +100,6 @@ function onError(err: AxiosError) {
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
-  const retryRanges = [
-    // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-    // 1xx - Retry (Informational, request still processing)
-    // 2xx - Do not retry (Success)
-    // 3xx - Do not retry (Redirect)
-    // 4xx - Do not retry (Client errors)
-    // 429 - Retry ("Too Many Requests")
-    // 5xx - Retry (Server errors)
-    [100, 199], [429, 429], [500, 599]
-  ];
   if (err.response && err.response.status) {
     let isInRange = false;
     for (const [min, max] of retryRanges) {
