@@ -61,7 +61,7 @@ describe('retry-axios', () => {
       assert.fail('Expected to throw');
     } catch (e) {
       const config = rax.getConfig(e);
-      assert.equal(config, undefined);
+      assert.equal(config!.currentRetryAttempt, 0);
     }
   });
 
@@ -114,7 +114,8 @@ describe('retry-axios', () => {
       await axios.get(url);
       assert.fail('Expected to throw');
     } catch (e) {
-      assert.equal(undefined, rax.getConfig(e));
+      const cfg = rax.getConfig(e);
+      assert.equal(cfg!.currentRetryAttempt, 0);
     }
   });
 
@@ -148,5 +149,26 @@ describe('retry-axios', () => {
     };
     const res = await axios(config);
     assert.equal(flipped, true);
+  });
+
+  it('should support overriding the shouldRetry method', async () => {
+    nock(url).get('/').reply(500);
+    interceptorId = rax.attach();
+    const config: RaxConfig = {
+      url,
+      raxConfig: {
+        shouldRetry: (err) => {
+          const cfg = rax.getConfig(err);
+          return false;
+        }
+      }
+    };
+    try {
+      await axios(config);
+      assert.fail('Expected to throw');
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.equal(cfg!.currentRetryAttempt, 0);
+    }
   });
 });

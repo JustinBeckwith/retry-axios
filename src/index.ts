@@ -40,6 +40,11 @@ export interface RetryConfig {
    * Function to invoke when a retry attempt is made.
    */
   onRetryAttempt?: (err: AxiosError) => void;
+
+  /**
+   * Function to invoke which determines if you should retry
+   */
+  shouldRetry?: (err: AxiosError) => boolean;
 }
 
 export type RaxConfig = {
@@ -95,36 +100,12 @@ function onError(err: AxiosError) {
   ];
   config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
 
-  // If there's no config, or retries are disabled, return.
-  if (!config || config.retry === 0) {
-    return Promise.reject(err);
-  }
+  // Put the config back into the err
+  (err.config as RaxConfig).raxConfig = config;
 
-  // Only retry with configured HttpMethods.
-  if (!err.config.method ||
-      config.httpMethodsToRetry.indexOf(err.config.method.toUpperCase()) < 0) {
-    return Promise.reject(err);
-  }
-
-  // If this wasn't in the list of status codes where we want
-  // to automatically retry, return.
-  if (err.response && err.response.status) {
-    let isInRange = false;
-    for (const [min, max] of retryRanges) {
-      const status = err.response.status;
-      if (status >= min && status <= max) {
-        isInRange = true;
-        break;
-      }
-    }
-    if (!isInRange) {
-      return Promise.reject(err);
-    }
-  }
-
-  // If we are out of retry attempts, return
-  config.currentRetryAttempt = config.currentRetryAttempt || 0;
-  if (config.currentRetryAttempt >= config.retry) {
+  // Determine if we should retry the request
+  const shouldRetryFn = config.shouldRetry || shouldRetryRequest;
+  if (!shouldRetryFn(err)) {
     return Promise.reject(err);
   }
 
@@ -133,15 +114,12 @@ function onError(err: AxiosError) {
   const delay = (Math.pow(2, config.currentRetryAttempt) - 1) / 2 * 1000;
 
   // We're going to retry!  Incremenent the counter.
-  config.currentRetryAttempt += 1;
+  (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
 
   // Create a promise that invokes the retry after the backOffDelay
   const backoff = new Promise(resolve => {
     setTimeout(resolve, delay);
   });
-
-  // Put the config back into the err
-  (err.config as RaxConfig).raxConfig = config;
 
   // Notify the user if they added an `onRetryAttempt` handler
   if (config.onRetryAttempt) {
@@ -152,6 +130,49 @@ function onError(err: AxiosError) {
   return backoff.then(() => {
     return config.instance!.request(err.config);
   });
+}
+
+/**
+ * Determine based on config if we should retry the request.
+ * @param err The AxiosError passed to the interceptor.
+ */
+function shouldRetryRequest(err: AxiosError) {
+  const config = (err.config as RaxConfig).raxConfig;
+
+  // If there's no config, or retries are disabled, return.
+  if (!config || config.retry === 0) {
+    return false;
+  }
+
+  // Only retry with configured HttpMethods.
+  if (!err.config.method ||
+      config.httpMethodsToRetry!.indexOf(err.config.method.toUpperCase()) < 0) {
+    return false;
+  }
+
+  // If this wasn't in the list of status codes where we want
+  // to automatically retry, return.
+  if (err.response && err.response.status) {
+    let isInRange = false;
+    for (const [min, max] of config.statusCodesToRetry!) {
+      const status = err.response.status;
+      if (status >= min && status <= max) {
+        isInRange = true;
+        break;
+      }
+    }
+    if (!isInRange) {
+      return false;
+    }
+  }
+
+  // If we are out of retry attempts, return
+  config.currentRetryAttempt = config.currentRetryAttempt || 0;
+  if (config.currentRetryAttempt >= config.retry!) {
+    return false;
+  }
+
+  return true;
 }
 
 /**

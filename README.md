@@ -55,7 +55,7 @@ const res = await axios({
     // Milliseconds to delay at first.  Defaults to 100.
     retryDelay: 100,
 
-    // # HTTP methods to automatically retry.  Defaults to:
+    // HTTP methods to automatically retry.  Defaults to:
     // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
     httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
 
@@ -69,6 +69,21 @@ const res = await axios({
     onRetryAttempt: (err) => {
       const cfg = rax.getConfig(err);
       console.log(`Retry attempt #${cfg.currentRetryAttempt}`);
+    }
+  }
+});
+```
+
+Or if you want, you can just decide if it should retry or not:
+
+```js
+const res = await axios({
+  url: 'https://test.local',
+  raxConfig: {
+    // Override the decision making process on if you should retry
+    shouldRetry: (err) => {
+      const cfg = rax.getConfig(err);
+      return true;
     }
   }
 });
