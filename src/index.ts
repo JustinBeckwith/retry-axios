@@ -1,5 +1,8 @@
 import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
 
+/**
+ * Configuration for the Axios `request` method.
+ */
 export interface RetryConfig {
   /**
    * The number of times to retry the request.  Defaults to 3.
@@ -139,6 +142,10 @@ function onError(err: AxiosError) {
   });
 }
 
+/**
+ * Acquire the raxConfig object from an AxiosError if available.
+ * @param err The Axios error with a config object.
+ */
 export function getConfig(err: AxiosError) {
   if (err && err.config) {
     return (err.config as RaxConfig).raxConfig;

@@ -9,7 +9,7 @@
 [![Greenkeeper badge][greenkeeper-image]][greenkeeper-url]
 [![style badge][gts-image]][gts-url]
 
-Use Axios interceptors to automatically retry failed requests.
+Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
 
 ## Installation
 
