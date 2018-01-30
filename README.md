@@ -1,4 +1,4 @@
-# node-retry-axios
+# retry-axios
 
 [![NPM Version][npm-image]][npm-url]
 [![CircleCI][circle-image]][circle-url]
@@ -9,7 +9,6 @@
 [![Greenkeeper badge][greenkeeper-image]][greenkeeper-url]
 [![style badge][gts-image]][gts-url]
 
-## retry-axios
 Use Axios interceptors to automatically retry failed requests.
 
 ## Installation
@@ -20,31 +19,40 @@ npm install retry-axios
 
 ## Usage
 
+To use this library, import it alongside of `axios`:
+
 ```js
 // Just import rax and your favorite version of axios
 const rax = require('retry-axios');
 const {axios} = require('axios');
+```
 
-// You can attach to the global `axios` object, and retry 3 times.
+You can attach to the global `axios` object, and retry 3 times by default:
+
+```js
 const interceptorId = rax.attach();
 const res = await axios('https://test.local');
-...
+```
 
-// Or you can create your own axios instance to make scoped requests
+Or you can create your own axios instance to make scoped requests:
+
+```js
 const myAxiosInstance = axios.create();
 const interceptorId = rax.attach(myAxiosInstance);
 const res = await myAxiosInstance.get('https://test.local');
-...
+```
 
-// You can control the number of retries and backoff delay
+You can control the number of retries and backoff delay:
+
+```js
 const interceptorId = rax.attach();
 const res = await axios({
   url: 'https://test.local',
   retry: 14,        // Retry 14 times before giving up
   retryDelay: 200,  // # milliseconds to delay at first
 });
-
 ```
+
 ## How it works
 
 This library attaches an `interceptor` to an axios instance you pass to the API.  This way you get to choose which version of `axios` you want to run, and you can compose many interceptors on the same request pipeline.
