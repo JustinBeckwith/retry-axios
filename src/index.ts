@@ -35,6 +35,11 @@ export interface RetryConfig {
    * Defaults to: [[100, 199], [429, 429], [500, 599]]
    */
   statusCodesToRetry?: number[][];
+
+  /**
+   * Function to invoke when a retry attempt is made.
+   */
+  onRetryAttempt?: (err: AxiosError) => void;
 }
 
 export type RaxConfig = {
@@ -135,8 +140,15 @@ function onError(err: AxiosError) {
     setTimeout(resolve, delay);
   });
 
-  // Return the promise in which recalls axios to retry the request
+  // Put the config back into the err
   (err.config as RaxConfig).raxConfig = config;
+
+  // Notify the user if they added an `onRetryAttempt` handler
+  if (config.onRetryAttempt) {
+    config.onRetryAttempt(err);
+  }
+
+  // Return the promise in which recalls axios to retry the request
   return backoff.then(() => {
     return config.instance!.request(err.config);
   });

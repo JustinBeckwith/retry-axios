@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import axios, {AxiosError} from 'axios';
 import * as nock from 'nock';
 import * as rax from '../src';
+import {RaxConfig, RetryConfig} from '../src';
 
 const url = 'http://test.local';
 
@@ -128,5 +129,24 @@ describe('retry-axios', () => {
       const cfg = rax.getConfig(e);
       assert.equal(0, cfg!.currentRetryAttempt);
     }
+  });
+
+  it('should notify on retry attempts', async () => {
+    nock(url).get('/').reply(500);
+    nock(url).get('/').reply(200, 'toast');
+    interceptorId = rax.attach();
+    let flipped = false;
+    const config: RaxConfig = {
+      url,
+      raxConfig: {
+        onRetryAttempt: (err) => {
+          const cfg = rax.getConfig(err);
+          assert.equal(cfg!.currentRetryAttempt, 1);
+          flipped = true;
+        }
+      }
+    };
+    const res = await axios(config);
+    assert.equal(flipped, true);
   });
 });

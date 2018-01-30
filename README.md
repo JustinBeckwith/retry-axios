@@ -51,15 +51,25 @@ const res = await axios({
   raxConfig: {
     // Retry 3 times before giving up.  Defaults to 3.
     retry: 3,
+
     // Milliseconds to delay at first.  Defaults to 100.
     retryDelay: 100,
+
     // # HTTP methods to automatically retry.  Defaults to:
     // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
     httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
+
     // The response status codes to retry.  Supports a double
     // array with a list of ranges.  Defaults to:
     // [[100, 199], [429, 429], [500, 599]]
     httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
+
+    // You can detect when a retry is happening, and figure out how many
+    // retry attempts have been made
+    onRetryAttempt: (err) => {
+      const cfg = rax.getConfig(err);
+      console.log(`Retry attempt #${cfg.currentRetryAttempt}`);
+    }
   }
 });
 ```
