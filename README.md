@@ -49,8 +49,11 @@ const interceptorId = rax.attach();
 const res = await axios({
   url: 'https://test.local',
   raxConfig: {
-    // Retry 3 times before giving up.  Defaults to 3.
+    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
     retry: 3,
+
+    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
+    noResponseRetries: 2,
 
     // Milliseconds to delay at first.  Defaults to 100.
     retryDelay: 100,

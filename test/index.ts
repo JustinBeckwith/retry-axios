@@ -19,15 +19,16 @@ describe('retry-axios', () => {
   });
 
   it('should provide an expected set of defaults', async () => {
-    nock(url).get('/').reply(500);
+    nock(url).get('/').thrice().reply(500);
     interceptorId = rax.attach();
     try {
-      await axios({url});
+      await axios(url);
       assert.fail('Expected to throw.');
     } catch (e) {
       const config = rax.getConfig(e);
       assert.equal(config!.currentRetryAttempt, 3);
       assert.equal(config!.retry, 3);
+      assert.equal(config!.noResponseRetries, 2);
       assert.equal(config!.retryDelay, 100);
       assert.equal(config!.instance, axios);
       const expectedMethods = ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
@@ -165,6 +166,35 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
+      assert.fail('Expected to throw');
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.equal(cfg!.currentRetryAttempt, 0);
+    }
+  });
+
+  it('should retry on ENOTFOUND', async () => {
+    nock(url).get('/').replyWithError({code: 'ENOTFOUND'});
+    nock(url).get('/').reply(200, 'oatmeal');
+    interceptorId = rax.attach();
+    const res = await axios.get(url);
+    assert.equal(res.data, 'oatmeal');
+  });
+
+  it('should retry on ETIMEDOUT', async () => {
+    nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    nock(url).get('/').reply(200, 'bacon');
+    interceptorId = rax.attach();
+    const res = await axios.get(url);
+    assert.equal(res.data, 'bacon');
+  });
+
+  it('should allow configuring noResponseRetries', async () => {
+    nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    interceptorId = rax.attach();
+    const config = {url, raxConfig: {noResponseRetries: 0}};
+    try {
+      const res = await axios(config);
       assert.fail('Expected to throw');
     } catch (e) {
       const cfg = rax.getConfig(e);

@@ -45,6 +45,11 @@ export interface RetryConfig {
    * Function to invoke which determines if you should retry
    */
   shouldRetry?: (err: AxiosError) => boolean;
+
+  /**
+   * When there is no response, the number of retries to attempt. Defaults to 2.
+   */
+  noResponseRetries?: number;
 }
 
 export type RaxConfig = {
@@ -85,6 +90,10 @@ function onError(err: AxiosError) {
   config.instance = config.instance || axios;
   config.httpMethodsToRetry =
       config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
+  config.noResponseRetries = (config.noResponseRetries === undefined ||
+                              config.noResponseRetries === null) ?
+      2 :
+      config.noResponseRetries;
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
@@ -141,6 +150,12 @@ function shouldRetryRequest(err: AxiosError) {
 
   // If there's no config, or retries are disabled, return.
   if (!config || config.retry === 0) {
+    return false;
+  }
+
+  // Check if this error has no response (ETIMEDOUT, ENOTFOUND, etc)
+  if (!err.response &&
+      ((config.currentRetryAttempt || 0) >= config.noResponseRetries!)) {
     return false;
   }
 
