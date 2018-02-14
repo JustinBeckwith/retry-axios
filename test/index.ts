@@ -98,11 +98,13 @@ describe('retry-axios', () => {
 
   it('should accept a new axios instance', async () => {
     const scopes = [
-      nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'raisins')
+      nock(url).get('/').times(2).reply(500),
+      nock(url).get('/').reply(200, 'raisins')
     ];
     const ax = axios.create();
     interceptorId = rax.attach(ax);
-    const res = await ax.get(url);
+    const cfg = {raxConfig: {instance: ax}} as RaxConfig;
+    const res = await ax.get(url, cfg);
     assert.equal(res.data, 'raisins');
     scopes.forEach(s => s.done());
 
