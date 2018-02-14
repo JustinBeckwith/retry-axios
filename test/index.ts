@@ -19,12 +19,12 @@ describe('retry-axios', () => {
   });
 
   it('should provide an expected set of defaults', async () => {
-    nock(url).get('/').thrice().reply(500);
+    const scope = nock(url).get('/').thrice().reply(500);
     interceptorId = rax.attach();
     try {
       await axios(url);
-      assert.fail('Expected to throw.');
     } catch (e) {
+      scope.done();
       const config = rax.getConfig(e);
       assert.equal(config!.currentRetryAttempt, 3);
       assert.equal(config!.retry, 3);
@@ -43,99 +43,115 @@ describe('retry-axios', () => {
         assert.equal(min, expMin);
         assert.equal(max, expMax);
       }
+      return;
     }
+    assert.fail('Expected to throw.');
   });
 
   it('should retry on 500 on the main export', async () => {
-    nock(url).get('/').reply(500);
-    nock(url).get('/').reply(200, 'toast');
+    const scopes =
+        [nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')];
     interceptorId = rax.attach();
     const res = await axios({url});
     assert.equal(res.data, 'toast');
+    scopes.forEach(s => s.done());
   });
 
   it('should not retry on a post', async () => {
-    nock(url).post('/').reply(500);
+    const scope = nock(url).post('/').reply(500);
     interceptorId = rax.attach();
     try {
       await axios.post(url);
-      assert.fail('Expected to throw');
     } catch (e) {
       const config = rax.getConfig(e);
       assert.equal(config!.currentRetryAttempt, 0);
+      scope.done();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 
   it('should retry at least the configured number of times', async () => {
-    nock(url).get('/').twice().reply(500);
-    nock(url).get('/').reply(200, 'milk');
+    const scopes = [
+      nock(url).get('/').times(3).reply(500),
+      nock(url).get('/').reply(200, 'milk')
+    ];
     interceptorId = rax.attach();
-    const cfg: rax.RaxConfig = {url, raxConfig: {retry: 2}};
+    const cfg: rax.RaxConfig = {url, raxConfig: {retry: 4}};
     const res = await axios(cfg);
     assert.equal(res.data, 'milk');
-  });
+    scopes.forEach(s => s.done());
+  }).timeout(10000);
 
   it('should not retry more than configured', async () => {
-    nock(url).get('/').twice().reply(500);
-    nock(url).get('/').reply(200, 'milk');
+    const scope = nock(url).get('/').twice().reply(500);
     interceptorId = rax.attach();
     const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1}};
     try {
       await axios(cfg);
-      assert.fail('Expected to throw');
     } catch (e) {
       assert.equal(rax.getConfig(e)!.currentRetryAttempt, 1);
+      scope.done();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 
   it('should accept a new axios instance', async () => {
-    nock(url).get('/').reply(500);
-    nock(url).get('/').reply(200, 'raisins');
+    const scopes = [
+      nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'raisins')
+    ];
     const ax = axios.create();
     interceptorId = rax.attach(ax);
     const res = await ax.get(url);
     assert.equal(res.data, 'raisins');
+    scopes.forEach(s => s.done());
 
     // now make sure it fails the first time with just `axios`
-    nock(url).get('/').reply(500);
-    nock(url).get('/').reply(200, 'raisins');
+    const scope = nock(url).get('/').reply(500);
+    assert.notEqual(ax, axios);
     try {
       await axios({url});
-      assert.fail('Expected to throw');
     } catch (e) {
       assert.equal(undefined, rax.getConfig(e));
+      scope.done();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 
   it('should not retry on 4xx errors', async () => {
-    nock(url).get('/').reply(404);
-    nock(url).get('/').reply(200);
+    const scope = nock(url).get('/').reply(404);
     interceptorId = rax.attach();
     try {
       await axios.get(url);
-      assert.fail('Expected to throw');
     } catch (e) {
       const cfg = rax.getConfig(e);
       assert.equal(cfg!.currentRetryAttempt, 0);
+      scope.done();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 
   it('should not retry if retries set to 0', async () => {
-    nock(url).get('/').reply(500);
+    const scope = nock(url).get('/').reply(500);
     interceptorId = rax.attach();
     try {
       const cfg: rax.RaxConfig = {url, raxConfig: {retry: 0}};
       await axios(cfg);
-      assert.fail('Expected to throw');
     } catch (e) {
       const cfg = rax.getConfig(e);
       assert.equal(0, cfg!.currentRetryAttempt);
+      scope.done();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 
   it('should notify on retry attempts', async () => {
-    nock(url).get('/').reply(500);
-    nock(url).get('/').reply(200, 'toast');
+    const scopes =
+        [nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')];
     interceptorId = rax.attach();
     let flipped = false;
     const config: RaxConfig = {
@@ -150,10 +166,11 @@ describe('retry-axios', () => {
     };
     const res = await axios(config);
     assert.equal(flipped, true);
+    scopes.forEach(s => s.done());
   });
 
   it('should support overriding the shouldRetry method', async () => {
-    nock(url).get('/').reply(500);
+    const scope = nock(url).get('/').reply(500);
     interceptorId = rax.attach();
     const config: RaxConfig = {
       url,
@@ -166,39 +183,49 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-      assert.fail('Expected to throw');
     } catch (e) {
       const cfg = rax.getConfig(e);
       assert.equal(cfg!.currentRetryAttempt, 0);
+      scope.done();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 
   it('should retry on ENOTFOUND', async () => {
-    nock(url).get('/').replyWithError({code: 'ENOTFOUND'});
-    nock(url).get('/').reply(200, 'oatmeal');
+    const scopes = [
+      nock(url).get('/').replyWithError({code: 'ENOTFOUND'}),
+      nock(url).get('/').reply(200, 'oatmeal')
+    ];
     interceptorId = rax.attach();
     const res = await axios.get(url);
     assert.equal(res.data, 'oatmeal');
+    scopes.forEach(s => s.done());
   });
 
   it('should retry on ETIMEDOUT', async () => {
-    nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
-    nock(url).get('/').reply(200, 'bacon');
+    const scopes = [
+      nock(url).get('/').replyWithError({code: 'ETIMEDOUT'}),
+      nock(url).get('/').reply(200, 'bacon')
+    ];
     interceptorId = rax.attach();
     const res = await axios.get(url);
     assert.equal(res.data, 'bacon');
+    scopes.forEach(s => s.done());
   });
 
   it('should allow configuring noResponseRetries', async () => {
-    nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
     interceptorId = rax.attach();
     const config = {url, raxConfig: {noResponseRetries: 0}};
     try {
       const res = await axios(config);
-      assert.fail('Expected to throw');
     } catch (e) {
       const cfg = rax.getConfig(e);
       assert.equal(cfg!.currentRetryAttempt, 0);
+      scope.isDone();
+      return;
     }
+    assert.fail('Expected to throw');
   });
 });
