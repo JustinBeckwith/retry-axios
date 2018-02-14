@@ -9,11 +9,10 @@ const url = 'http://test.local';
 nock.disableNetConnect();
 
 describe('retry-axios', () => {
-  let interceptorId: number|null;
-
+  let interceptorId: number|undefined;
   afterEach(() => {
     nock.cleanAll();
-    if (interceptorId) {
+    if (interceptorId !== undefined) {
       rax.detach(interceptorId);
     }
   });
