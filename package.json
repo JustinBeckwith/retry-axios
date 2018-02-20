@@ -1,6 +1,6 @@
 {
   "name": "retry-axios",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "description": "Retry HTTP requests with Axios.",
   "main": "./build/src/index.js",
   "types": "./build/src/index.d.ts",
