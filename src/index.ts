@@ -127,7 +127,13 @@ function onError(err: AxiosError) {
 
   // Create a promise that invokes the retry after the backOffDelay
   const backoff = new Promise(resolve => {
-    setTimeout(resolve, delay);
+    const isBrowser:boolean = !!(typeof window !== 'undefined' && window.navigator);
+
+    if (isBrowser && !window.navigator.onLine) {
+      window.addEventListener('online',  resolve, { once: true });
+    } else {
+      setTimeout(resolve, delay);
+    }
   });
 
   // Notify the user if they added an `onRetryAttempt` handler

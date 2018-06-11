@@ -215,6 +215,20 @@ describe('retry-axios', () => {
     scopes.forEach(s => s.done());
   });
 
+  it('should retry when back online', (done) => {
+    const scopes = [
+      nock(url).get('/').replyWithError({code: 'ETIMEDOUT'}),
+      nock(url).get('/').reply(200, 'bacon')
+    ];
+    interceptorId = rax.attach();
+    axios.get(url).then((res) => {
+      assert.equal(res.data, 'bacon');
+
+      scopes.forEach(s => s.done());
+      done();
+    });
+  });
+
   it('should allow configuring noResponseRetries', async () => {
     const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
     interceptorId = rax.attach();
