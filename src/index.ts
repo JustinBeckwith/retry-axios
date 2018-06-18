@@ -1,4 +1,5 @@
-import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import axios,
+{AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
 
 /**
  * Configuration for the Axios `request` method.
@@ -77,9 +78,7 @@ export function detach(interceptorId: number, instance?: AxiosInstance) {
   instance.interceptors.response.eject(interceptorId);
 }
 
-function onFulfilled(res: AxiosResponse) {
-  return res;
-}
+function onFulfilled(res: AxiosResponse) { return res; }
 
 function onError(err: AxiosError) {
   const config = (err.config as RaxConfig).raxConfig || {};
@@ -88,12 +87,12 @@ function onError(err: AxiosError) {
       (config.retry === undefined || config.retry === null) ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
-  config.httpMethodsToRetry =
-      config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
+  config.httpMethodsToRetry = config.httpMethodsToRetry ||
+                              [ 'GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE' ];
   config.noResponseRetries = (config.noResponseRetries === undefined ||
-                              config.noResponseRetries === null) ?
-      2 :
-      config.noResponseRetries;
+                              config.noResponseRetries === null)
+                                 ? 2
+                                 : config.noResponseRetries;
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
@@ -105,7 +104,7 @@ function onError(err: AxiosError) {
     // 4xx - Do not retry (Client errors)
     // 429 - Retry ("Too Many Requests")
     // 5xx - Retry (Server errors)
-    [100, 199], [429, 429], [500, 599]
+    [ 100, 199 ], [ 429, 429 ], [ 500, 599 ]
   ];
   config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
 
@@ -126,9 +125,7 @@ function onError(err: AxiosError) {
   (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
 
   // Create a promise that invokes the retry after the backOffDelay
-  const backoff = new Promise(resolve => {
-    setTimeout(resolve, delay);
-  });
+  const backoff = new Promise(resolve => { setTimeout(resolve, delay); });
 
   // Notify the user if they added an `onRetryAttempt` handler
   if (config.onRetryAttempt) {
@@ -136,9 +133,7 @@ function onError(err: AxiosError) {
   }
 
   // Return the promise in which recalls axios to retry the request
-  return backoff.then(() => {
-    return config.instance!.request(err.config);
-  });
+  return backoff.then(() => config.instance!.request(err.config));
 }
 
 /**

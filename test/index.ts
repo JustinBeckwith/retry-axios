@@ -1,8 +1,8 @@
-import * as assert from 'assert';
-import axios, {AxiosError} from 'axios';
-import * as nock from 'nock';
+import assert from 'assert';
+import axios from 'axios';
+import nock from 'nock';
 import * as rax from '../src';
-import {RaxConfig, RetryConfig} from '../src';
+import {RaxConfig} from '../src';
 
 const url = 'http://test.local';
 
@@ -30,11 +30,11 @@ describe('retry-axios', () => {
       assert.equal(config!.noResponseRetries, 2);
       assert.equal(config!.retryDelay, 100);
       assert.equal(config!.instance, axios);
-      const expectedMethods = ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
+      const expectedMethods = [ 'GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE' ];
       for (const method of config!.httpMethodsToRetry!) {
         assert(expectedMethods.indexOf(method) > -1);
       }
-      const expectedStatusCodes = [[100, 199], [429, 429], [500, 599]];
+      const expectedStatusCodes = [ [ 100, 199 ], [ 429, 429 ], [ 500, 599 ] ];
       const statusCodesToRetry = config!.statusCodesToRetry!;
       for (let i = 0; i < statusCodesToRetry.length; i++) {
         const [min, max] = statusCodesToRetry[i];
@@ -48,8 +48,9 @@ describe('retry-axios', () => {
   });
 
   it('should retry on 500 on the main export', async () => {
-    const scopes =
-        [nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')];
+    const scopes = [
+      nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')
+    ];
     interceptorId = rax.attach();
     const res = await axios({url});
     assert.equal(res.data, 'toast');
@@ -76,7 +77,7 @@ describe('retry-axios', () => {
       nock(url).get('/').reply(200, 'milk')
     ];
     interceptorId = rax.attach();
-    const cfg: rax.RaxConfig = {url, raxConfig: {retry: 4}};
+    const cfg: rax.RaxConfig = {url, raxConfig : {retry : 4}};
     const res = await axios(cfg);
     assert.equal(res.data, 'milk');
     scopes.forEach(s => s.done());
@@ -85,7 +86,7 @@ describe('retry-axios', () => {
   it('should not retry more than configured', async () => {
     const scope = nock(url).get('/').twice().reply(500);
     interceptorId = rax.attach();
-    const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1}};
+    const cfg: rax.RaxConfig = {url, raxConfig : {retry : 1}};
     try {
       await axios(cfg);
     } catch (e) {
@@ -103,7 +104,7 @@ describe('retry-axios', () => {
     ];
     const ax = axios.create();
     interceptorId = rax.attach(ax);
-    const cfg = {raxConfig: {instance: ax}} as RaxConfig;
+    const cfg = {raxConfig : {instance : ax}} as RaxConfig;
     const res = await ax.get(url, cfg);
     assert.equal(res.data, 'raisins');
     scopes.forEach(s => s.done());
@@ -139,7 +140,7 @@ describe('retry-axios', () => {
     const scope = nock(url).get('/').reply(500);
     interceptorId = rax.attach();
     try {
-      const cfg: rax.RaxConfig = {url, raxConfig: {retry: 0}};
+      const cfg: rax.RaxConfig = {url, raxConfig : {retry : 0}};
       await axios(cfg);
     } catch (e) {
       const cfg = rax.getConfig(e);
@@ -151,14 +152,15 @@ describe('retry-axios', () => {
   });
 
   it('should notify on retry attempts', async () => {
-    const scopes =
-        [nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')];
+    const scopes = [
+      nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')
+    ];
     interceptorId = rax.attach();
     let flipped = false;
     const config: RaxConfig = {
       url,
-      raxConfig: {
-        onRetryAttempt: (err) => {
+      raxConfig : {
+        onRetryAttempt : (err) => {
           const cfg = rax.getConfig(err);
           assert.equal(cfg!.currentRetryAttempt, 1);
           flipped = true;
@@ -175,8 +177,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     const config: RaxConfig = {
       url,
-      raxConfig: {
-        shouldRetry: (err) => {
+      raxConfig : {
+        shouldRetry : (err) => {
           const cfg = rax.getConfig(err);
           return false;
         }
@@ -195,7 +197,7 @@ describe('retry-axios', () => {
 
   it('should retry on ENOTFOUND', async () => {
     const scopes = [
-      nock(url).get('/').replyWithError({code: 'ENOTFOUND'}),
+      nock(url).get('/').replyWithError({code : 'ENOTFOUND'}),
       nock(url).get('/').reply(200, 'oatmeal')
     ];
     interceptorId = rax.attach();
@@ -206,7 +208,7 @@ describe('retry-axios', () => {
 
   it('should retry on ETIMEDOUT', async () => {
     const scopes = [
-      nock(url).get('/').replyWithError({code: 'ETIMEDOUT'}),
+      nock(url).get('/').replyWithError({code : 'ETIMEDOUT'}),
       nock(url).get('/').reply(200, 'bacon')
     ];
     interceptorId = rax.attach();
@@ -216,9 +218,9 @@ describe('retry-axios', () => {
   });
 
   it('should allow configuring noResponseRetries', async () => {
-    const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    const scope = nock(url).get('/').replyWithError({code : 'ETIMEDOUT'});
     interceptorId = rax.attach();
-    const config = {url, raxConfig: {noResponseRetries: 0}};
+    const config = {url, raxConfig : {noResponseRetries : 0}};
     try {
       const res = await axios(config);
     } catch (e) {
