@@ -4,7 +4,10 @@ steps:
 - name: 'node:8'
   args: ['npm', 'test']
 - name: 'node:8'
+  args: ['env']
+- name: 'node:8'
   args: ['npm', 'run', 'codecov']
+
 
 # ---
 # release_tags: &release_tags
