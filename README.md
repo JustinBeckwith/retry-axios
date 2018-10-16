@@ -70,7 +70,7 @@ const res = await axios({
     // The response status codes to retry.  Supports a double
     // array with a list of ranges.  Defaults to:
     // [[100, 199], [429, 429], [500, 599]]
-    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
+    statusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
 
     // If you are using a non static instance of Axios you need
     // to pass that instance here (const ax = axios.create())
