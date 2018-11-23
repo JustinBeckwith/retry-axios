@@ -1,0 +1,19 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "entry",
+        "modules": false
+      }
+    ]
+  ],
+  "plugins": [
+    ["transform-es2015-modules-umd", {
+      "globals": {
+        "axios": "axios"
+      }
+    }]
+  ],
+  "moduleId": "rax"
+}
