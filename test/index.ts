@@ -1,8 +1,8 @@
 import * as assert from 'assert';
-import axios, {AxiosError} from 'axios';
+import axios from 'axios';
 import * as nock from 'nock';
 import * as rax from '../src';
-import {RaxConfig, RetryConfig} from '../src';
+import {RaxConfig} from '../src';
 
 const url = 'http://test.local';
 

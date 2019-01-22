@@ -142,9 +142,7 @@ function onError(err: AxiosError) {
   }
 
   // Return the promise in which recalls axios to retry the request
-  return backoff.then(() => {
-    return config.instance!.request(err.config);
-  });
+  return backoff.then(() => config.instance!.request(err.config));
 }
 
 /**
