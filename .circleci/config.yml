@@ -1,39 +1,31 @@
----
-release_tags: &release_tags
-  tags:
-    only: /^v\d+(\.\d+){2}(-.*)?$/
-
-# "Include" for unit tests definition.
-unit_tests: &unit_tests
-  steps:
-    - checkout
-    - run: npm install
-    - run: npm test
-    - run: npm run codecov
-
 version: 2.0
 workflows:
   version: 2
-  tests:
+  test:
     jobs:
-      - node6:
-          filters: *release_tags
-      - node8:
-          filters: *release_tags
-      - node10:
-          filters: *release_tags
-      - node11:
-          filters: *release_tags
+      - node6
+      - node8
+      - node10
+      - node11
+      - lint
+      - commit_lint
       - publish_npm:
           requires:
             - node6
             - node8
             - node10
             - node11
+            - lint
+            - commit_lint
           filters:
             branches:
-              ignore: /.*/
-            <<: *release_tags
+              only: master
+
+unit_tests: &unit_tests
+  steps:
+    - checkout
+    - run: npm install
+    - run: npm test
 
 jobs:
   node6:
@@ -56,13 +48,33 @@ jobs:
       - image: node:11
         user: node
     <<: *unit_tests
-
-  publish_npm:
+  lint:
     docker:
-      - image: node:10
-        user: node
+      - image: node:11
     steps:
       - checkout
-      - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
       - run: npm install
-      - run: npm publish
+      - run: npm run lint
+  commit_lint:
+    docker:
+      - image: node:11
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run commitlint
+  coverage:
+    docker:
+      - image: node:11
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm test
+      - run: npm run coverage
+  publish_npm:
+    docker:
+      - image: node:11
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run compile
+      - run: npx semantic-release
