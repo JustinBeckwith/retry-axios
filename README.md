@@ -8,7 +8,6 @@
 [![codecov][codecov-image]][codecov-url]
 [![style badge][gts-image]][gts-url]
 
-
 ## Installation
 
 ``` sh
@@ -36,11 +35,9 @@ Or you can create your own axios instance to make scoped requests:
 
 ```js
 const myAxiosInstance = axios.create();
-myAxiosInstance.defaults = {
-  raxConfig: {
-    instance: myAxiosInstance
-  }
-}
+myAxiosInstance.defaults.raxConfig = {
+  instance: myAxiosInstance
+};
 const interceptorId = rax.attach(myAxiosInstance);
 const res = await myAxiosInstance.get('https://test.local');
 ```
