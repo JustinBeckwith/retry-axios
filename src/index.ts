@@ -82,6 +82,9 @@ function onFulfilled(res: AxiosResponse) {
 }
 
 function onError(err: AxiosError) {
+  if (!err.config) {
+    return Promise.reject(err);
+  }
   const config = (err.config as RaxConfig).raxConfig || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
