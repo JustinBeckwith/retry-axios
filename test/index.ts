@@ -170,7 +170,7 @@ describe('retry-axios', () => {
     scopes.forEach(s => s.done());
   });
 
-  it.only('should notify on retry attempts as a promise', async () => {
+  it('should notify on retry attempts as a promise', async () => {
     const scopes =
         [nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')];
     interceptorId = rax.attach();
