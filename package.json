@@ -12,7 +12,7 @@
     "url": "https://github.com/JustinBeckwith/retry-axios.git"
   },
   "scripts": {
-    "check": "gts check",
+    "lint": "gts check",
     "clean": "gts clean",
     "codecov": "nyc report --reporter=json && codecov -f coverage/*.json",
     "fix": "gts fix",
@@ -21,8 +21,8 @@
     "test": "nyc mocha build/test --timeout 5000 --require source-map-support/register",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run check && npm run license-check",
-    "license-check": "jsgl --local ."
+    "license-check": "jsgl --local .",
+    "commitlint": "git log -1 --pretty=%B | commitlint"
   },
   "keywords": [
     "axios",
@@ -39,6 +39,8 @@
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.6",
     "@babel/preset-env": "^7.1.6",
+    "@commitlint/cli": "^7.3.2",
+    "@commitlint/config-conventional": "^7.3.1",
     "@types/mocha": "^5.2.5",
     "@types/nock": "^9.3.0",
     "@types/node": "^10.5.4",
@@ -47,11 +49,12 @@
     "codecov": "^3.0.4",
     "gts": "^0.9.0",
     "js-green-licenses": "^0.5.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.0.0",
     "nock": "^10.0.0",
     "nyc": "^13.0.0",
+    "semantic-release": "^15.13.3",
     "source-map-support": "^0.5.6",
-    "typescript": "~3.2.0"
+    "typescript": "~3.3.0"
   },
   "files": [
     "build/src"
