@@ -25,22 +25,22 @@ describe('retry-axios', () => {
     } catch (e) {
       scope.done();
       const config = rax.getConfig(e);
-      assert.equal(config!.currentRetryAttempt, 3);
-      assert.equal(config!.retry, 3);
-      assert.equal(config!.noResponseRetries, 2);
-      assert.equal(config!.retryDelay, 100);
-      assert.equal(config!.instance, axios);
+      assert.equal(config!.currentRetryAttempt, 3, 'currentRetryAttempt');
+      assert.equal(config!.retry, 3, 'retry');
+      assert.equal(config!.noResponseRetries, 2, 'noResponseRetries');
+      assert.equal(config!.retryDelay, 100, 'retryDelay');
+      assert.equal(config!.instance, axios, 'axios');
       const expectedMethods = ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
       for (const method of config!.httpMethodsToRetry!) {
-        assert(expectedMethods.indexOf(method) > -1);
+        assert(expectedMethods.indexOf(method) > -1, `exected method: $method`);
       }
       const expectedStatusCodes = [[100, 199], [429, 429], [500, 599]];
       const statusCodesToRetry = config!.statusCodesToRetry!;
       for (let i = 0; i < statusCodesToRetry.length; i++) {
         const [min, max] = statusCodesToRetry[i];
         const [expMin, expMax] = expectedStatusCodes[i];
-        assert.equal(min, expMin);
-        assert.equal(max, expMax);
+        assert.equal(min, expMin, `status code min`);
+        assert.equal(max, expMax, `status code max`);
       }
       return;
     }
@@ -162,6 +162,29 @@ describe('retry-axios', () => {
           const cfg = rax.getConfig(err);
           assert.equal(cfg!.currentRetryAttempt, 1);
           flipped = true;
+        }
+      }
+    };
+    const res = await axios(config);
+    assert.equal(flipped, true);
+    scopes.forEach(s => s.done());
+  });
+
+  it('should notify on retry attempts as a promise', async () => {
+    const scopes =
+        [nock(url).get('/').reply(500), nock(url).get('/').reply(200, 'toast')];
+    interceptorId = rax.attach();
+    let flipped = false;
+    const config: RaxConfig = {
+      url,
+      raxConfig: {
+        onRetryAttempt: (err) => {
+          return new Promise((resolve, reject) => {
+            const cfg = rax.getConfig(err);
+            assert.equal(cfg!.currentRetryAttempt, 1);
+            flipped = true;
+            resolve();
+          });
         }
       }
     };

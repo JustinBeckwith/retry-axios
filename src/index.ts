@@ -124,25 +124,27 @@ function onError(err: AxiosError) {
     return Promise.reject(err);
   }
 
-  // Calculate time to wait with exponential backoff.
-  // Formula: (2^c - 1 / 2) * 1000
-  const delay = (Math.pow(2, config.currentRetryAttempt) - 1) / 2 * 1000;
-
-  // We're going to retry!  Incremenent the counter.
-  (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
-
   // Create a promise that invokes the retry after the backOffDelay
-  const backoff = new Promise(resolve => {
+  const onBackoffPromise = new Promise((resolve) => {
+    // Calculate time to wait with exponential backoff.
+    // Formula: (2^c - 1 / 2) * 1000
+    const delay = (Math.pow(2, config.currentRetryAttempt!) - 1) / 2 * 1000;
+
+    // We're going to retry!  Incremenent the counter.
+    (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
     setTimeout(resolve, delay);
   });
 
   // Notify the user if they added an `onRetryAttempt` handler
-  if (config.onRetryAttempt) {
-    config.onRetryAttempt(err);
-  }
+  const onRetryAttemptPromise = (config.onRetryAttempt) ?
+      Promise.resolve(config.onRetryAttempt(err)) :
+      Promise.resolve();
 
   // Return the promise in which recalls axios to retry the request
-  return backoff.then(() => config.instance!.request(err.config));
+  return Promise.resolve()
+      .then(() => onBackoffPromise)
+      .then(() => onRetryAttemptPromise)
+      .then(() => config.instance!.request(err.config));
 }
 
 /**

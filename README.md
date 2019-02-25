@@ -81,6 +81,29 @@ const res = await axios({
 });
 ```
 
+If the logic in onRetryAttempt requires to be asynchronous, you can return a promise, then retry will be executed only after the promise is resolved:
+
+```js
+const res = await axios({
+  url: 'https://test.local',
+  raxConfig: {
+    onRetryAttempt: (err) => {
+      return new Promise((resolve, reject) => {
+        // call a custom asynchronous function
+        refreshToken(err, function(token, error) {
+          if (!error) {
+            window.localStorage.setItem('token',token);
+            resolve();
+          } else {
+            reject();
+          }
+        })
+      });
+    }
+  }
+});
+```
+
 Or if you want, you can just decide if it should retry or not:
 
 ```js
