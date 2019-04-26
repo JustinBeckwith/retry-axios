@@ -6,6 +6,7 @@ workflows:
       - node8
       - node10
       - node11
+      - node12
       - lint
       - commit_lint
       - publish_npm:
@@ -13,6 +14,7 @@ workflows:
             - node8
             - node10
             - node11
+            - node12
             - lint
             - commit_lint
           filters:
@@ -39,6 +41,11 @@ jobs:
   node11:
     docker:
       - image: node:11
+        user: node
+    <<: *unit_tests
+  node12:
+    docker:
+      - image: node:12
         user: node
     <<: *unit_tests
   lint:
