@@ -3,18 +3,18 @@ workflows:
   version: 2
   test:
     jobs:
-      - node6
       - node8
       - node10
       - node11
+      - node12
       - lint
       - commit_lint
       - publish_npm:
           requires:
-            - node6
             - node8
             - node10
             - node11
+            - node12
             - lint
             - commit_lint
           filters:
@@ -28,11 +28,6 @@ unit_tests: &unit_tests
     - run: npm test
 
 jobs:
-  node6:
-    docker:
-      - image: node:6
-        user: node
-    <<: *unit_tests
   node8:
     docker:
       - image: node:8
@@ -46,6 +41,11 @@ jobs:
   node11:
     docker:
       - image: node:11
+        user: node
+    <<: *unit_tests
+  node12:
+    docker:
+      - image: node:12
         user: node
     <<: *unit_tests
   lint:
