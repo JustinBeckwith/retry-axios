@@ -1,4 +1,9 @@
-import axios, {AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 
 /**
  * Configuration for the Axios `request` method.
@@ -53,8 +58,8 @@ export interface RetryConfig {
 }
 
 export type RaxConfig = {
-  raxConfig: RetryConfig
-}&AxiosRequestConfig;
+  raxConfig: RetryConfig;
+} & AxiosRequestConfig;
 
 /**
  * Attach the interceptor to the Axios instance.
@@ -85,15 +90,20 @@ function onError(err: AxiosError) {
   const config = (err.config as RaxConfig).raxConfig || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
-      (config.retry === undefined || config.retry === null) ? 3 : config.retry;
+    config.retry === undefined || config.retry === null ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
-  config.httpMethodsToRetry =
-      config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
-  config.noResponseRetries = (config.noResponseRetries === undefined ||
-                              config.noResponseRetries === null) ?
-      2 :
-      config.noResponseRetries;
+  config.httpMethodsToRetry = config.httpMethodsToRetry || [
+    'GET',
+    'HEAD',
+    'PUT',
+    'OPTIONS',
+    'DELETE',
+  ];
+  config.noResponseRetries =
+    config.noResponseRetries === undefined || config.noResponseRetries === null
+      ? 2
+      : config.noResponseRetries;
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
@@ -105,7 +115,9 @@ function onError(err: AxiosError) {
     // 4xx - Do not retry (Client errors)
     // 429 - Retry ("Too Many Requests")
     // 5xx - Retry (Server errors)
-    [100, 199], [429, 429], [500, 599]
+    [100, 199],
+    [429, 429],
+    [500, 599],
   ];
   config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
 
@@ -119,10 +131,10 @@ function onError(err: AxiosError) {
   }
 
   // Create a promise that invokes the retry after the backOffDelay
-  const onBackoffPromise = new Promise((resolve) => {
+  const onBackoffPromise = new Promise(resolve => {
     // Calculate time to wait with exponential backoff.
     // Formula: (2^c - 1 / 2) * 1000
-    const delay = (Math.pow(2, config.currentRetryAttempt!) - 1) / 2 * 1000;
+    const delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
 
     // We're going to retry!  Incremenent the counter.
     (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
@@ -130,15 +142,15 @@ function onError(err: AxiosError) {
   });
 
   // Notify the user if they added an `onRetryAttempt` handler
-  const onRetryAttemptPromise = (config.onRetryAttempt) ?
-      Promise.resolve(config.onRetryAttempt(err)) :
-      Promise.resolve();
+  const onRetryAttemptPromise = config.onRetryAttempt
+    ? Promise.resolve(config.onRetryAttempt(err))
+    : Promise.resolve();
 
   // Return the promise in which recalls axios to retry the request
   return Promise.resolve()
-      .then(() => onBackoffPromise)
-      .then(() => onRetryAttemptPromise)
-      .then(() => config.instance!.request(err.config));
+    .then(() => onBackoffPromise)
+    .then(() => onRetryAttemptPromise)
+    .then(() => config.instance!.request(err.config));
 }
 
 /**
@@ -154,14 +166,18 @@ function shouldRetryRequest(err: AxiosError) {
   }
 
   // Check if this error has no response (ETIMEDOUT, ENOTFOUND, etc)
-  if (!err.response &&
-      ((config.currentRetryAttempt || 0) >= config.noResponseRetries!)) {
+  if (
+    !err.response &&
+    (config.currentRetryAttempt || 0) >= config.noResponseRetries!
+  ) {
     return false;
   }
 
   // Only retry with configured HttpMethods.
-  if (!err.config.method ||
-      config.httpMethodsToRetry!.indexOf(err.config.method.toUpperCase()) < 0) {
+  if (
+    !err.config.method ||
+    config.httpMethodsToRetry!.indexOf(err.config.method.toUpperCase()) < 0
+  ) {
     return false;
   }
 
