@@ -21,8 +21,7 @@
     "test": "nyc mocha build/test --timeout 5000 --require source-map-support/register",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "license-check": "jsgl --local .",
-    "commitlint": "git log -1 --pretty=%B | commitlint"
+    "license-check": "jsgl --local ."
   },
   "keywords": [
     "axios",
@@ -39,8 +38,6 @@
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.6",
     "@babel/preset-env": "^7.1.6",
-    "@commitlint/cli": "^8.0.0",
-    "@commitlint/config-conventional": "^8.0.0",
     "@types/mocha": "^5.2.5",
     "@types/nock": "^10.0.0",
     "@types/node": "^10.5.4",
