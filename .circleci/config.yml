@@ -8,7 +8,6 @@ workflows:
       - node11
       - node12
       - lint
-      - commit_lint
       - publish_npm:
           requires:
             - node8
@@ -16,7 +15,6 @@ workflows:
             - node11
             - node12
             - lint
-            - commit_lint
           filters:
             branches:
               only: master
@@ -55,13 +53,6 @@ jobs:
       - checkout
       - run: npm install
       - run: npm run lint
-  commit_lint:
-    docker:
-      - image: node:11
-    steps:
-      - checkout
-      - run: npm install
-      - run: npm run commitlint
   coverage:
     docker:
       - image: node:11
