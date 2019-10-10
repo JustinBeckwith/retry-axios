@@ -14,6 +14,9 @@
 npm install retry-axios
 ```
 
+### Note:
+Currenlty, this library will not work with `axios 0.19.0` because of a known bug in axios itself. See more details about the [bug](https://github.com/axios/axios/issues/2203)
+
 ## Usage
 
 To use this library, import it alongside of `axios`:
