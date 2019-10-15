@@ -87,6 +87,7 @@ function onFulfilled(res: AxiosResponse) {
 }
 
 function onError(err: AxiosError) {
+  if (!Object.prototype.hasOwnProperty(err,'config')) err.config = {};
   const config = (err.config as RaxConfig).raxConfig || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
