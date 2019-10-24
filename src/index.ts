@@ -87,7 +87,7 @@ function onFulfilled(res: AxiosResponse) {
 }
 
 function onError(err: AxiosError) {
-  const config = (err.config as RaxConfig).raxConfig || {};
+  const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
     config.retry === undefined || config.retry === null ? 3 : config.retry;
