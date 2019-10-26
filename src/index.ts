@@ -122,7 +122,6 @@ function onError(err: AxiosError) {
   config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
 
   // Put the config back into the err
-  err = err || {};
   err.config = err.config || {};
   (err.config as RaxConfig).raxConfig = config;
 
