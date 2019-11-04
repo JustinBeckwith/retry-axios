@@ -157,7 +157,7 @@ function onError(err: AxiosError) {
  * Determine based on config if we should retry the request.
  * @param err The AxiosError passed to the interceptor.
  */
-function shouldRetryRequest(err: AxiosError) {
+export function shouldRetryRequest(err: AxiosError) {
   const config = (err.config as RaxConfig).raxConfig;
 
   // If there's no config, or retries are disabled, return.
