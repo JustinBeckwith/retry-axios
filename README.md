@@ -1,5 +1,6 @@
 # retry-axios
-> Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
+
+> Use Axios interceptors to automatically retry failed requests. Super flexible. Built in exponential backoff.
 
 [![NPM Version][npm-image]][npm-url]
 [![CircleCI][circle-image]][circle-url]
@@ -10,12 +11,13 @@
 
 ## Installation
 
-``` sh
+```sh
 npm install retry-axios
 ```
 
 ### Note:
-Currenlty, this library will not work with `axios 0.19.0` because of a known bug in axios itself. See more details about the [bug](https://github.com/axios/axios/issues/2203)
+
+Currenlty, this library will not work with `axios 0.19.0` because of a known bug in axios itself. See more details [bug](https://github.com/axios/axios/issues/2203)
 
 ## Usage
 
@@ -24,7 +26,7 @@ To use this library, import it alongside of `axios`:
 ```js
 // Just import rax and your favorite version of axios
 const rax = require('retry-axios');
-const {axios} = require('axios');
+const { axios } = require('axios');
 ```
 
 You can attach to the global `axios` object, and retry 3 times by default:
@@ -76,7 +78,7 @@ const res = await axios({
 
     // You can detect when a retry is happening, and figure out how many
     // retry attempts have been made
-    onRetryAttempt: (err) => {
+    onRetryAttempt: err => {
       const cfg = rax.getConfig(err);
       console.log(`Retry attempt #${cfg.currentRetryAttempt}`);
     }
@@ -90,17 +92,17 @@ If the logic in onRetryAttempt requires to be asynchronous, you can return a pro
 const res = await axios({
   url: 'https://test.local',
   raxConfig: {
-    onRetryAttempt: (err) => {
+    onRetryAttempt: err => {
       return new Promise((resolve, reject) => {
         // call a custom asynchronous function
         refreshToken(err, function(token, error) {
           if (!error) {
-            window.localStorage.setItem('token',token);
+            window.localStorage.setItem('token', token);
             resolve();
           } else {
             reject();
           }
-        })
+        });
       });
     }
   }
@@ -114,7 +116,7 @@ const res = await axios({
   url: 'https://test.local',
   raxConfig: {
     // Override the decision making process on if you should retry
-    shouldRetry: (err) => {
+    shouldRetry: err => {
       const cfg = rax.getConfig(err);
       return true;
     }
@@ -124,9 +126,10 @@ const res = await axios({
 
 ## How it works
 
-This library attaches an `interceptor` to an axios instance you pass to the API.  This way you get to choose which version of `axios` you want to run, and you can compose many interceptors on the same request pipeline.
+This library attaches an `interceptor` to an axios instance you pass to the API. This way you get to choose which version of `axios` you want to run, and you can compose many interceptors on the same request pipeline.
 
 ## License
+
 [Apache-2.0](LICENSE)
 
 [circle-image]: https://circleci.com/gh/JustinBeckwith/retry-axios.svg?style=shield
