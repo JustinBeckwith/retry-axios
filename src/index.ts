@@ -87,7 +87,7 @@ function onFulfilled(res: AxiosResponse) {
 }
 
 // tslint:disable-next-line no-any
-const values = (objOrArray: {[key: string]: any}) => {
+const values = (objOrArray: { [key: string]: any }) => {
   return Object.keys(objOrArray).map((key: string) => objOrArray[key]);
 };
 
@@ -99,12 +99,12 @@ function onError(err: AxiosError) {
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
   config.httpMethodsToRetry = values(
-      config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE']);
-  config.noResponseRetries = (config.noResponseRetries === undefined ||
-      config.noResponseRetries === null) ?
-      2 :
-      config.noResponseRetries;
-
+    config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE']
+  );
+  config.noResponseRetries =
+    config.noResponseRetries === undefined || config.noResponseRetries === null
+      ? 2
+      : config.noResponseRetries;
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
@@ -120,8 +120,9 @@ function onError(err: AxiosError) {
     [429, 429],
     [500, 599],
   ];
-  config.statusCodesToRetry =
-      values(config.statusCodesToRetry || retryRanges).map(values);
+  config.statusCodesToRetry = values(
+    config.statusCodesToRetry || retryRanges
+  ).map(values);
 
   // Put the config back into the err
   (err.config as RaxConfig).raxConfig = config;
