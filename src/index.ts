@@ -173,10 +173,11 @@ function onError(err: AxiosError) {
   const onBackoffPromise = new Promise(resolve => {
     // Calculate time to wait with exponential backoff.
     // Formula: (2^c - 1 / 2) * 1000
+    let delay: number;
     if (config.backoffType && config.backoffType === "linear") {
-      const delay = config.currentRetryAttempt! * 1000;
+      delay = config.currentRetryAttempt! * 1000;
     } else {
-      const delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+      delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
     }
 
     // We're going to retry!  Incremenent the counter.
