@@ -177,7 +177,7 @@ function onError(err: AxiosError) {
     if (config.backoffType && config.backoffType === "linear") {
       delay = config.currentRetryAttempt! * 1000;
     } else if (config.backoffType && config.backoffType === "static") {
-      delay = config.retryDelay;
+      delay = config.retryDelay!;
     } else {
       delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
     }
