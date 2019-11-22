@@ -76,6 +76,10 @@ const res = await axios({
     // to pass that instance here (const ax = axios.create())
     instance: ax,
 
+    // You can set the backoff type.
+    // options are 'exponential' (default), 'static' or 'linear'
+    backoffType: 'exponential',
+
     // You can detect when a retry is happening, and figure out how many
     // retry attempts have been made
     onRetryAttempt: err => {
