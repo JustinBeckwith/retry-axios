@@ -3,7 +3,7 @@ import axios, {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse
-} from "axios";
+} from 'axios';
 
 /**
  * Configuration for the Axios `request` method.
@@ -99,11 +99,11 @@ function onError(err: AxiosError) {
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
   config.httpMethodsToRetry = config.httpMethodsToRetry || [
-    "GET",
-    "HEAD",
-    "PUT",
-    "OPTIONS",
-    "DELETE"
+    'GET',
+    'HEAD',
+    'PUT',
+    'OPTIONS',
+    'DELETE'
   ];
   config.noResponseRetries =
     config.noResponseRetries === undefined || config.noResponseRetries === null
@@ -122,7 +122,7 @@ function onError(err: AxiosError) {
     // 5xx - Retry (Server errors)
     [100, 199],
     [429, 429],
-    [500, 599]
+    [500, 599],
   ];
   config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
 
