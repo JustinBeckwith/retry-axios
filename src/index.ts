@@ -57,7 +57,7 @@ export interface RetryConfig {
   noResponseRetries?: number;
 
   /**
-   * Backoff Type; 'linear' or 'exponential'.
+   * Backoff Type; 'linear', 'static' or 'exponential'.
    */
   backoffType?: string;
 }
@@ -142,6 +142,8 @@ function onError(err: AxiosError) {
     let delay: number;
     if (config.backoffType && config.backoffType === "linear") {
       delay = config.currentRetryAttempt! * 1000;
+    } else if (config.backoffType && config.backoffType === "static") {
+      delay = config.retryDelay;
     } else {
       delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
     }

@@ -1,4 +1,5 @@
 # retry-axios
+
 > Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
 
 [![NPM Version][npm-image]][npm-url]
@@ -71,6 +72,10 @@ const res = await axios({
     // to pass that instance here (const ax = axios.create())
     instance: ax,
 
+    // You can set the backoff type.
+    // options are 'exponential' (default), 'static' or 'linear'
+    backoffType: 'exponential',
+
     // You can detect when a retry is happening, and figure out how many
     // retry attempts have been made
     onRetryAttempt: (err) => {
@@ -124,6 +129,7 @@ const res = await axios({
 This library attaches an `interceptor` to an axios instance you pass to the API.  This way you get to choose which version of `axios` you want to run, and you can compose many interceptors on the same request pipeline.
 
 ## License
+
 [Apache-2.0](LICENSE)
 
 [circle-image]: https://circleci.com/gh/JustinBeckwith/retry-axios.svg?style=shield
