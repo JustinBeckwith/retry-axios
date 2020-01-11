@@ -1,11 +1,11 @@
 {
   "name": "retry-axios",
-  "version": "0.3.2",
+  "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
   "main": "./build/src/index.js",
   "types": "./build/src/index.d.ts",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=10.0.0"
   },
   "repository": {
     "type": "git",
