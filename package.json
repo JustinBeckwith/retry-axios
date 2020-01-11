@@ -48,7 +48,7 @@
     "gts": "^1.0.0",
     "js-green-licenses": "^1.0.0",
     "mocha": "^6.1.4",
-    "nock": "^10.0.6",
+    "nock": "^11.0.0",
     "semantic-release": "^15.13.12",
     "source-map-support": "^0.5.12",
     "typescript": "~3.6.0"
