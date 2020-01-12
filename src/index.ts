@@ -86,11 +86,6 @@ function onFulfilled(res: AxiosResponse) {
   return res;
 }
 
-// tslint:disable-next-line no-any
-const values = (objOrArray: { [key: string]: any }) => {
-  return Object.keys(objOrArray).map((key: string) => objOrArray[key]);
-};
-
 function onError(err: AxiosError) {
   const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
@@ -98,9 +93,13 @@ function onError(err: AxiosError) {
     config.retry === undefined || config.retry === null ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
-  config.httpMethodsToRetry = values(
-    config.httpMethodsToRetry || ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE']
-  );
+  config.httpMethodsToRetry = config.httpMethodsToRetry || [
+    'GET',
+    'HEAD',
+    'PUT',
+    'OPTIONS',
+    'DELETE'
+  ];
   config.noResponseRetries =
     config.noResponseRetries === undefined || config.noResponseRetries === null
       ? 2
@@ -120,9 +119,7 @@ function onError(err: AxiosError) {
     [429, 429],
     [500, 599],
   ];
-  config.statusCodesToRetry = values(
-    config.statusCodesToRetry || retryRanges
-  ).map(values);
+  config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
 
   // Put the config back into the err
   (err.config as RaxConfig).raxConfig = config;
