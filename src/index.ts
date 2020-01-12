@@ -98,7 +98,7 @@ function onError(err: AxiosError) {
     'HEAD',
     'PUT',
     'OPTIONS',
-    'DELETE'
+    'DELETE',
   ];
   config.noResponseRetries =
     config.noResponseRetries === undefined || config.noResponseRetries === null
