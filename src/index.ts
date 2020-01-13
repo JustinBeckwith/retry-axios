@@ -59,7 +59,7 @@ export interface RetryConfig {
   /**
    * Backoff Type; 'linear', 'static' or 'exponential'.
    */
-  backoffType?: string;
+  backoffType?: 'linear' | 'static' | 'exponential';
 }
 
 export type RaxConfig = {
@@ -131,6 +131,7 @@ function onError(err: AxiosError) {
     config.retry === undefined || config.retry === null ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
+  config.backoffType = config.backoffType || 'exponential';
   config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
     'GET',
     'HEAD',
@@ -174,9 +175,9 @@ function onError(err: AxiosError) {
     // Calculate time to wait with exponential backoff.
     // Formula: (2^c - 1 / 2) * 1000
     let delay: number;
-    if (config.backoffType && config.backoffType === "linear") {
+    if (config.backoffType === 'linear') {
       delay = config.currentRetryAttempt! * 1000;
-    } else if (config.backoffType && config.backoffType === "static") {
+    } else if (config.backoffType === 'static') {
       delay = config.retryDelay!;
     } else {
       delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;

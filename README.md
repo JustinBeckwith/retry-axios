@@ -1,10 +1,6 @@
 # retry-axios
 
-<<<<<<< HEAD
 > Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
-=======
-> Use Axios interceptors to automatically retry failed requests. Super flexible. Built in exponential backoff.
->>>>>>> master
 
 [![NPM Version][npm-image]][npm-url]
 [![CircleCI][circle-image]][circle-url]
