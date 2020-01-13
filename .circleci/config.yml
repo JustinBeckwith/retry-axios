@@ -3,17 +3,15 @@ workflows:
   version: 2
   test:
     jobs:
-      - node8
       - node10
-      - node11
       - node12
+      - node13
       - lint
       - publish_npm:
           requires:
-            - node8
             - node10
-            - node11
             - node12
+            - node13
             - lint
           filters:
             branches:
@@ -26,19 +24,9 @@ unit_tests: &unit_tests
     - run: npm test
 
 jobs:
-  node8:
-    docker:
-      - image: node:8
-        user: node
-    <<: *unit_tests
   node10:
     docker:
       - image: node:10
-        user: node
-    <<: *unit_tests
-  node11:
-    docker:
-      - image: node:11
         user: node
     <<: *unit_tests
   node12:
@@ -46,16 +34,21 @@ jobs:
       - image: node:12
         user: node
     <<: *unit_tests
+  node13:
+    docker:
+      - image: node:13
+        user: node
+    <<: *unit_tests
   lint:
     docker:
-      - image: node:11
+      - image: node:12
     steps:
       - checkout
       - run: npm install
       - run: npm run lint
   coverage:
     docker:
-      - image: node:11
+      - image: node:12
     steps:
       - checkout
       - run: npm install
@@ -63,7 +56,7 @@ jobs:
       - run: npm run coverage
   publish_npm:
     docker:
-      - image: node:11
+      - image: node:12
     steps:
       - checkout
       - run: npm install

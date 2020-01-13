@@ -91,14 +91,47 @@ function onFulfilled(res: AxiosResponse) {
   return res;
 }
 
+/**
+ * Some versions of axios are converting arrays into objects during retries.
+ * This will attempt to convert an object with the following structure into
+ * an array, where the keys correspond to the indices:
+ * {
+ *   0: {
+ *     // some property
+ *   },
+ *   1: {
+ *     // another
+ *   }
+ * }
+ * @param obj The object that (may) have integers that correspond to an index
+ * @returns An array with the pucked values
+ */
+function normalizeArray<T>(obj?: T[]): T[] | undefined {
+  const arr: T[] = [];
+  if (!obj) {
+    return undefined;
+  }
+  if (Array.isArray(obj)) {
+    return obj;
+  }
+  if (typeof obj === 'object') {
+    Object.keys(obj).forEach(key => {
+      if (typeof key === 'number') {
+        arr[key] = obj[key];
+      }
+    });
+  }
+  return arr;
+}
+
 function onError(err: AxiosError) {
-  const config = (err.config as RaxConfig).raxConfig || {};
+  const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
     config.retry === undefined || config.retry === null ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
-  config.httpMethodsToRetry = config.httpMethodsToRetry || [
+  config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
     'GET',
     'HEAD',
     'PUT',
@@ -124,7 +157,8 @@ function onError(err: AxiosError) {
     [429, 429],
     [500, 599],
   ];
-  config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
+  config.statusCodesToRetry =
+    normalizeArray(config.statusCodesToRetry) || retryRanges;
 
   // Put the config back into the err
   (err.config as RaxConfig).raxConfig = config;
