@@ -124,6 +124,26 @@ const res = await axios({
 });
 ```
 
+If you want to add custom retry logic without duplicating too much of the built-in logic, `rax.shouldRetryRequest` will tell you if a request would normally be retried:
+```js
+const res = await axios({
+  url: 'https://test.local',
+  raxConfig: {
+    // Override the decision making process on if you should retry
+    shouldRetry: err => {
+      const cfg = rax.getConfig(err);
+      if (cfg.currentRetryAttempt >= cfg.retry) return false // ensure max retries is always respected
+  
+      // Always retry this status text, regardless of code or request type
+      if (err.response.statusText.includes('Try again')) return true
+
+      // Handle the request based on your other config options, e.g. `statusCodesToRetry`
+      return rax.shouldRetryRequest(err)
+    }
+  }
+});
+``` 
+
 ## How it works
 
 This library attaches an `interceptor` to an axios instance you pass to the API. This way you get to choose which version of `axios` you want to run, and you can compose many interceptors on the same request pipeline.
