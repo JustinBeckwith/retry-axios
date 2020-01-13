@@ -55,6 +55,11 @@ export interface RetryConfig {
    * When there is no response, the number of retries to attempt. Defaults to 2.
    */
   noResponseRetries?: number;
+
+  /**
+   * Backoff Type; 'linear', 'static' or 'exponential'.
+   */
+  backoffType?: 'linear' | 'static' | 'exponential';
 }
 
 export type RaxConfig = {
@@ -126,6 +131,7 @@ function onError(err: AxiosError) {
     config.retry === undefined || config.retry === null ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
+  config.backoffType = config.backoffType || 'exponential';
   config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
     'GET',
     'HEAD',
@@ -168,7 +174,14 @@ function onError(err: AxiosError) {
   const onBackoffPromise = new Promise(resolve => {
     // Calculate time to wait with exponential backoff.
     // Formula: (2^c - 1 / 2) * 1000
-    const delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+    let delay: number;
+    if (config.backoffType === 'linear') {
+      delay = config.currentRetryAttempt! * 1000;
+    } else if (config.backoffType === 'static') {
+      delay = config.retryDelay!;
+    } else {
+      delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+    }
 
     // We're going to retry!  Incremenent the counter.
     (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;

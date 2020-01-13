@@ -33,6 +33,7 @@ describe('retry-axios', () => {
       assert.strictEqual(config!.noResponseRetries, 2, 'noResponseRetries');
       assert.strictEqual(config!.retryDelay, 100, 'retryDelay');
       assert.strictEqual(config!.instance, axios, 'axios');
+      assert.strictEqual(config!.backoffType, 'exponential', 'backoffType');
       const expectedMethods = ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
       for (const method of config!.httpMethodsToRetry!) {
         assert(expectedMethods.indexOf(method) > -1, `exected method: $method`);
@@ -179,6 +180,23 @@ describe('retry-axios', () => {
       const cfg = rax.getConfig(e);
       assert.strictEqual(0, cfg!.currentRetryAttempt);
       scope.done();
+      return;
+    }
+    assert.fail('Expected to throw');
+  });
+
+  it('should allow configuring backoffType', async () => {
+    const scope = nock(url)
+      .get('/')
+      .replyWithError({ code: 'ETIMEDOUT' });
+    interceptorId = rax.attach();
+    const config = { url, raxConfig: { backoffType: 'exponential' } };
+    try {
+      const res = await axios(config);
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.strictEqual(cfg!.backoffType, 'exponential');
+      scope.isDone();
       return;
     }
     assert.fail('Expected to throw');
