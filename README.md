@@ -15,10 +15,6 @@
 npm install retry-axios
 ```
 
-### Note:
-
-Currenlty, this library will not work with `axios 0.19.0` because of a known bug in axios itself. See more details [bug](https://github.com/axios/axios/issues/2203)
-
 ## Usage
 
 To use this library, import it alongside of `axios`:
@@ -26,7 +22,7 @@ To use this library, import it alongside of `axios`:
 ```js
 // Just import rax and your favorite version of axios
 const rax = require('retry-axios');
-const { axios } = require('axios');
+const axios = require('axios');
 ```
 
 You can attach to the global `axios` object, and retry 3 times by default:
