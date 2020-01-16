@@ -263,3 +263,11 @@ export function getConfig(err: AxiosError) {
   }
   return;
 }
+
+// Include this so `config.raxConfig` works easily.
+// See https://github.com/JustinBeckwith/retry-axios/issues/64.
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    raxConfig?: RetryConfig;
+  }
+}

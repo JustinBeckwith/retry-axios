@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import * as nock from 'nock';
 import * as rax from '../src';
 import { RaxConfig } from '../src';
@@ -190,7 +190,10 @@ describe('retry-axios', () => {
       .get('/')
       .replyWithError({ code: 'ETIMEDOUT' });
     interceptorId = rax.attach();
-    const config = { url, raxConfig: { backoffType: 'exponential' } };
+    const config: AxiosRequestConfig = {
+      url,
+      raxConfig: { backoffType: 'exponential' },
+    };
     try {
       const res = await axios(config);
     } catch (e) {
