@@ -25,6 +25,13 @@ const rax = require('retry-axios');
 const axios = require('axios');
 ```
 
+Or, if you're using TypeScript / es modules:
+
+```js
+import * as rax from 'retry-axios';
+import axios from 'axios';
+```
+
 You can attach to the global `axios` object, and retry 3 times by default:
 
 ```js
