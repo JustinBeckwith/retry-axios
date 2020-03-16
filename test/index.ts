@@ -331,4 +331,29 @@ describe('retry-axios', () => {
     }
     assert.fail('Expected to throw');
   });
+
+  it('should reset error counter upon success', async () => {
+    const scopes = [
+      nock(url)
+        .get('/')
+        .times(2)
+        .reply(500),
+      nock(url)
+        .get('/')
+        .reply(200, 'milk'),
+      nock(url)
+        .get('/')
+        .reply(500),
+      nock(url)
+        .get('/')
+        .reply(200, 'toast'),
+    ];
+    interceptorId = rax.attach();
+    const cfg: rax.RaxConfig = { url, raxConfig: { retry: 2 } };
+    const res = await axios(cfg);
+    assert.strictEqual(res.data, 'milk');
+    const res2 = await axios(cfg);
+    assert.strictEqual(res2.data, 'toast');
+    scopes.forEach(s => s.done());
+  });
 });
