@@ -356,4 +356,26 @@ describe('retry-axios', () => {
     assert.strictEqual(res2.data, 'toast');
     scopes.forEach(s => s.done());
   });
+
+  it('should ignore requests that have been canceled', async () => {
+    const scope = nock(url)
+      .get('/')
+      .delay(200)
+      .reply(200, 'toast');
+    interceptorId = rax.attach();
+    try {
+      const src = axios.CancelToken.source();
+      const cfg: rax.RaxConfig = {
+        url,
+        raxConfig: { retry: 2 },
+        cancelToken: src.token
+      };
+      const req = axios(cfg);
+      src.cancel();
+      const res = await req;
+      throw new Error('The canceled request completed.');
+    } catch (err) {
+      assert.strictEqual(axios.isCancel(err), true);
+    } 
+  });
 });
