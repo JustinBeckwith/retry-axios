@@ -368,7 +368,7 @@ describe('retry-axios', () => {
       const cfg: rax.RaxConfig = {
         url,
         raxConfig: { retry: 2 },
-        cancelToken: src.token
+        cancelToken: src.token,
       };
       const req = axios(cfg);
       src.cancel();
@@ -376,6 +376,6 @@ describe('retry-axios', () => {
       throw new Error('The canceled request completed.');
     } catch (err) {
       assert.strictEqual(axios.isCancel(err), true);
-    } 
+    }
   });
 });
