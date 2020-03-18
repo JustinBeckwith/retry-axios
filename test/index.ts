@@ -358,10 +358,16 @@ describe('retry-axios', () => {
   });
 
   it('should ignore requests that have been canceled', async () => {
-    const scope = nock(url)
-      .get('/')
-      .delay(200)
-      .reply(200, 'toast');
+    const scopes = [
+      nock(url)
+        .get('/')
+        .times(2)
+        .delay(5)
+        .reply(500),
+      nock(url)
+        .get('/')
+        .reply(200, 'toast'),
+    ];
     interceptorId = rax.attach();
     try {
       const src = axios.CancelToken.source();
@@ -371,11 +377,14 @@ describe('retry-axios', () => {
         cancelToken: src.token,
       };
       const req = axios(cfg);
-      src.cancel();
+      setTimeout(() => {
+        src.cancel();
+      }, 10);
       const res = await req;
       throw new Error('The canceled request completed.');
     } catch (err) {
       assert.strictEqual(axios.isCancel(err), true);
     }
+    assert.strictEqual(scopes[1].isDone(), false);
   });
 });
