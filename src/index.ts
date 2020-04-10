@@ -162,7 +162,7 @@ function onError(err: AxiosError) {
     normalizeArray(config.statusCodesToRetry) || retryRanges;
 
   // Put the config back into the err
-  (err.config as RaxConfig).raxConfig = { ...config };
+  (err.config as RaxConfig).raxConfig = {...config};
 
   // Determine if we should retry the request
   const shouldRetryFn = config.shouldRetry || shouldRetryRequest;
