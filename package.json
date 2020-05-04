@@ -2,8 +2,11 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "main": "./build/src/index.js",
-  "types": "./build/src/index.d.ts",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "unpkg": "dist/index.umd.js",
+  "types": "dist/index.d.ts",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -15,10 +18,11 @@
     "lint": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",
-    "compile": "tsc -p .",
+    "compile": "tsc -p tsconfig.compile.json",
+    "build": "microbundle --tsconfig=tsconfig.json",
     "umd": "rm -rf umd && babel build/src -d umd --source-maps",
     "test": "c8 mocha build/test",
-    "prepare": "npm run compile",
+    "prepare": "npm run build",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
   },
