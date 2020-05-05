@@ -125,6 +125,10 @@ function normalizeArray<T>(obj?: T[]): T[] | undefined {
 }
 
 function onError(err: AxiosError) {
+  if (axios.isCancel(err)) {
+    return Promise.reject(err);
+  }
+
   const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
