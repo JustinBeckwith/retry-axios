@@ -301,28 +301,22 @@ describe('retry-axios', () => {
 
   it('should ignore requests that have been canceled', async () => {
     const scopes = [
-      nock(url)
-        .get('/')
-        .times(2)
-        .delay(5)
-        .reply(500),
-      nock(url)
-        .get('/')
-        .reply(200, 'toast'),
+      nock(url).get('/').times(2).delay(5).reply(500),
+      nock(url).get('/').reply(200, 'toast'),
     ];
     interceptorId = rax.attach();
     try {
       const src = axios.CancelToken.source();
       const cfg: rax.RaxConfig = {
         url,
-        raxConfig: { retry: 2 },
+        raxConfig: {retry: 2},
         cancelToken: src.token,
       };
       const req = axios(cfg);
       setTimeout(() => {
         src.cancel();
       }, 10);
-      const res = await req;
+      await req;
       throw new Error('The canceled request completed.');
     } catch (err) {
       assert.strictEqual(axios.isCancel(err), true);
