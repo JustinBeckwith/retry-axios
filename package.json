@@ -46,7 +46,7 @@
     "c8": "^7.0.0",
     "codecov": "^3.5.0",
     "gts": "^2.0.0",
-    "js-green-licenses": "^1.0.0",
+    "js-green-licenses": "^2.0.0",
     "mocha": "^7.0.0",
     "nock": "^12.0.0",
     "semantic-release": "^17.0.4",
