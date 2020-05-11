@@ -1,6 +1,6 @@
-import assert from 'assert';
+import * as assert from 'assert';
 import axios, {AxiosRequestConfig} from 'axios';
-import nock from 'nock';
+import * as nock from 'nock';
 import {describe, it, afterEach} from 'mocha';
 import * as rax from '../src';
 import {RaxConfig} from '../src';

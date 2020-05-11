@@ -4,8 +4,7 @@
     "rootDir": ".",
     "outDir": "build",
     "moduleResolution": "node",
-    "module": "ES2015",
-    "allowSyntheticDefaultImports": true
+    "module": "ES2015"
   },
   "include": [
     "src/*.ts",
