@@ -63,7 +63,8 @@
   ],
   "c8": {
     "exclude": [
-      "build/test"
+      "build/test",
+      "dist"
     ]
   },
   "browserslist": "> 1%, last 2 versions, Firefox ESR"
