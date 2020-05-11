@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "module": "dist/index.module.js",
   "unpkg": "dist/index.umd.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "engines": {
     "node": ">=10.0.0"
   },
