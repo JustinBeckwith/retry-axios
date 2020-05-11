@@ -4,7 +4,8 @@
     "rootDir": ".",
     "outDir": "dist",
     "moduleResolution": "node",
-    "module": "ES2015"
+    "module": "ES2015",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/*.ts",
