@@ -50,7 +50,7 @@
     "mocha": "^7.0.0",
     "nock": "^12.0.0",
     "semantic-release": "^17.0.4",
-    "typescript": "~3.8.0"
+    "typescript": "~3.9.0"
   },
   "files": [
     "build/src"
