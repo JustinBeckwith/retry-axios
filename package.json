@@ -14,7 +14,6 @@
   "scripts": {
     "lint": "gts check",
     "clean": "gts clean",
-    "codecov": "c8 report --reporter=json && codecov -f coverage/*.json",
     "fix": "gts fix",
     "compile": "tsc -p .",
     "umd": "rm -rf umd && babel build/src -d umd --source-maps",
@@ -44,7 +43,6 @@
     "axios": "^0.19.0",
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
     "c8": "^7.0.0",
-    "codecov": "^3.5.0",
     "gts": "^2.0.0",
     "js-green-licenses": "^2.0.0",
     "mocha": "^7.0.0",
