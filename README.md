@@ -3,7 +3,7 @@
 > Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
 
 [![NPM Version][npm-image]][npm-url]
-[![CircleCI][circle-image]][circle-url]
+[![GitHub Actions][github-image]][github-url]
 [![Dependency Status][david-image]][david-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
 [![codecov][codecov-image]][codecov-url]
@@ -139,8 +139,8 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 
 [Apache-2.0](LICENSE)
 
-[circle-image]: https://circleci.com/gh/JustinBeckwith/retry-axios.svg?style=shield
-[circle-url]: https://circleci.com/gh/JustinBeckwith/retry-axios
+[github-image]: https://github.com/JustinBeckwith/retry-axios/workflows/ci/badge.svg
+[github-url]: https://github.com/JustinBeckwith/retry-axios/actions/
 [codecov-image]: https://codecov.io/gh/JustinBeckwith/retry-axios/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/JustinBeckwith/retry-axios
 [david-image]: https://david-dm.org/JustinBeckwith/retry-axios.svg
