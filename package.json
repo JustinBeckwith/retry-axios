@@ -2,8 +2,11 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "main": "./build/src/index.js",
-  "types": "./build/src/index.d.ts",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "unpkg": "dist/index.umd.js",
+  "types": "dist/src/index.d.ts",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -15,10 +18,11 @@
     "lint": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",
-    "compile": "tsc -p .",
+    "compile": "tsc --target ES5 --module CommonJS",
+    "build-web": "microbundle",
     "umd": "rm -rf umd && babel build/src -d umd --source-maps",
     "test": "c8 mocha build/test",
-    "prepare": "npm run compile",
+    "prepare": "npm run build-web",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
   },
@@ -35,7 +39,6 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "@types/mocha": "^7.0.0",
     "@types/nock": "^10.0.3",
@@ -45,17 +48,19 @@
     "c8": "^7.0.0",
     "gts": "^2.0.0",
     "js-green-licenses": "^2.0.0",
+    "microbundle": "^0.11.0",
     "mocha": "^7.0.0",
     "nock": "^12.0.0",
     "semantic-release": "^17.0.4",
     "typescript": "~3.9.0"
   },
   "files": [
-    "build/src"
+    "dist"
   ],
   "c8": {
     "exclude": [
-      "build/test"
+      "build/test",
+      "dist"
     ]
   },
   "browserslist": "> 1%, last 2 versions, Firefox ESR"
