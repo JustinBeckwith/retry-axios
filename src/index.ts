@@ -166,7 +166,7 @@ function onError(err: AxiosError) {
     normalizeArray(config.statusCodesToRetry) || retryRanges;
 
   // Put the config back into the err
-  err.config = error.config || {}; // allow for wider range of errors
+  err.config = err.config || {}; // allow for wider range of errors
   (err.config as RaxConfig).raxConfig = {...config};
 
   // Determine if we should retry the request
