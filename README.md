@@ -63,7 +63,7 @@ const res = await axios({
     // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
     noResponseRetries: 2,
 
-    // Milliseconds to delay at first.  Defaults to 100.
+    // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static' 
     retryDelay: 100,
 
     // HTTP methods to automatically retry.  Defaults to:
