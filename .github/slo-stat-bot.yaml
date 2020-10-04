@@ -1,0 +1,6 @@
+- appliesTo:
+    gitHubLabels:
+      - "triage me"
+  complianceSettings:
+    responseTime: 7d
+    resolutionTime: 0
