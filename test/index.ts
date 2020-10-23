@@ -129,6 +129,25 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
+  it('should accept defaults on a new instance', async () => {
+    const scopes = [
+      nock(url).get('/').times(2).reply(500),
+      nock(url).get('/').reply(200, '🥧'),
+    ];
+    const ax = axios.create();
+    ax.defaults.raxConfig = {
+      retry: 3,
+      instance: ax,
+      onRetryAttempt: evt => {
+        console.log(`attempt #${evt.config!.raxConfig?.currentRetryAttempt}`);
+      },
+    };
+    interceptorId = rax.attach(ax);
+    const res = await ax.get(url);
+    assert.strictEqual(res.data, '🥧');
+    scopes.forEach(s => s.done());
+  });
+
   it('should not retry on 4xx errors', async () => {
     const scope = nock(url).get('/').reply(404);
     interceptorId = rax.attach();
