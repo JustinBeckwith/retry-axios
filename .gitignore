@@ -4,4 +4,6 @@ umd/
 coverage/
 .nyc_output/
 .vscode/
+.rts2*
+dist/
 package-lock.json

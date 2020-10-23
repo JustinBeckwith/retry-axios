@@ -1,9 +1,9 @@
 # retry-axios
 
-> Use Axios interceptors to automatically retry failed requests. Super flexible. Built in exponential backoff.
+> Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
 
 [![NPM Version][npm-image]][npm-url]
-[![CircleCI][circle-image]][circle-url]
+[![GitHub Actions][github-image]][github-url]
 [![Dependency Status][david-image]][david-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
 [![codecov][codecov-image]][codecov-url]
@@ -15,10 +15,6 @@
 npm install retry-axios
 ```
 
-### Note:
-
-Currenlty, this library will not work with `axios 0.19.0` because of a known bug in axios itself. See more details [bug](https://github.com/axios/axios/issues/2203)
-
 ## Usage
 
 To use this library, import it alongside of `axios`:
@@ -26,7 +22,14 @@ To use this library, import it alongside of `axios`:
 ```js
 // Just import rax and your favorite version of axios
 const rax = require('retry-axios');
-const { axios } = require('axios');
+const axios = require('axios');
+```
+
+Or, if you're using TypeScript / es modules:
+
+```js
+import * as rax from 'retry-axios';
+import axios from 'axios';
 ```
 
 You can attach to the global `axios` object, and retry 3 times by default:
@@ -60,7 +63,7 @@ const res = await axios({
     // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
     noResponseRetries: 2,
 
-    // Milliseconds to delay at first.  Defaults to 100.
+    // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static' 
     retryDelay: 100,
 
     // HTTP methods to automatically retry.  Defaults to:
@@ -75,6 +78,10 @@ const res = await axios({
     // If you are using a non static instance of Axios you need
     // to pass that instance here (const ax = axios.create())
     instance: ax,
+
+    // You can set the backoff type.
+    // options are 'exponential' (default), 'static' or 'linear'
+    backoffType: 'exponential',
 
     // You can detect when a retry is happening, and figure out how many
     // retry attempts have been made
@@ -152,8 +159,8 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 
 [Apache-2.0](LICENSE)
 
-[circle-image]: https://circleci.com/gh/JustinBeckwith/retry-axios.svg?style=shield
-[circle-url]: https://circleci.com/gh/JustinBeckwith/retry-axios
+[github-image]: https://github.com/JustinBeckwith/retry-axios/workflows/ci/badge.svg
+[github-url]: https://github.com/JustinBeckwith/retry-axios/actions/
 [codecov-image]: https://codecov.io/gh/JustinBeckwith/retry-axios/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/JustinBeckwith/retry-axios
 [david-image]: https://david-dm.org/JustinBeckwith/retry-axios.svg

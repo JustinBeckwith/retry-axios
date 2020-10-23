@@ -55,6 +55,11 @@ export interface RetryConfig {
    * When there is no response, the number of retries to attempt. Defaults to 2.
    */
   noResponseRetries?: number;
+
+  /**
+   * Backoff Type; 'linear', 'static' or 'exponential'.
+   */
+  backoffType?: 'linear' | 'static' | 'exponential';
 }
 
 export type RaxConfig = {
@@ -120,12 +125,17 @@ function normalizeArray<T>(obj?: T[]): T[] | undefined {
 }
 
 function onError(err: AxiosError) {
+  if (axios.isCancel(err)) {
+    return Promise.reject(err);
+  }
+
   const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
     config.retry === undefined || config.retry === null ? 3 : config.retry;
   config.retryDelay = config.retryDelay || 100;
   config.instance = config.instance || axios;
+  config.backoffType = config.backoffType || 'exponential';
   config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
     'GET',
     'HEAD',
@@ -156,7 +166,8 @@ function onError(err: AxiosError) {
     normalizeArray(config.statusCodesToRetry) || retryRanges;
 
   // Put the config back into the err
-  (err.config as RaxConfig).raxConfig = config;
+  err.config = err.config || {}; // allow for wider range of errors
+  (err.config as RaxConfig).raxConfig = {...config};
 
   // Determine if we should retry the request
   const shouldRetryFn = config.shouldRetry || shouldRetryRequest;
@@ -168,7 +179,14 @@ function onError(err: AxiosError) {
   const onBackoffPromise = new Promise(resolve => {
     // Calculate time to wait with exponential backoff.
     // Formula: (2^c - 1 / 2) * 1000
-    const delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+    let delay: number;
+    if (config.backoffType === 'linear') {
+      delay = config.currentRetryAttempt! * 1000;
+    } else if (config.backoffType === 'static') {
+      delay = config.retryDelay!;
+    } else {
+      delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+    }
 
     // We're going to retry!  Incremenent the counter.
     (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
@@ -249,4 +267,12 @@ export function getConfig(err: AxiosError) {
     return (err.config as RaxConfig).raxConfig;
   }
   return;
+}
+
+// Include this so `config.raxConfig` works easily.
+// See https://github.com/JustinBeckwith/retry-axios/issues/64.
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    raxConfig?: RetryConfig;
+  }
 }

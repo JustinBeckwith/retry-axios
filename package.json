@@ -2,8 +2,11 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "main": "./build/src/index.js",
-  "types": "./build/src/index.d.ts",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "unpkg": "dist/index.umd.js",
+  "types": "dist/src/index.d.ts",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -14,12 +17,12 @@
   "scripts": {
     "lint": "gts check",
     "clean": "gts clean",
-    "codecov": "c8 report --reporter=json && codecov -f coverage/*.json",
     "fix": "gts fix",
-    "compile": "tsc -p .",
+    "compile": "tsc --target ES5 --module CommonJS",
+    "build-web": "microbundle",
     "umd": "rm -rf umd && babel build/src -d umd --source-maps",
-    "test": "c8 mocha build/test --timeout 5000 --require source-map-support/register",
-    "prepare": "npm run compile",
+    "test": "c8 mocha build/test",
+    "prepare": "npm run build-web",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
   },
@@ -36,29 +39,28 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
-    "@types/mocha": "^5.2.7",
+    "@types/mocha": "^8.0.0",
     "@types/nock": "^10.0.3",
     "@types/node": "^12.0.4",
-    "axios": "^0.19.0",
+    "axios": "^0.21.0",
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
     "c8": "^7.0.0",
-    "codecov": "^3.5.0",
-    "gts": "^1.0.0",
-    "js-green-licenses": "^1.0.0",
-    "mocha": "^7.0.0",
-    "nock": "^11.0.0",
-    "semantic-release": "^16.0.0",
-    "source-map-support": "^0.5.12",
-    "typescript": "~3.7.0"
+    "gts": "^3.0.0",
+    "js-green-licenses": "^2.0.0",
+    "microbundle": "^0.11.0",
+    "mocha": "^8.0.0",
+    "nock": "^13.0.0",
+    "semantic-release": "^17.0.4",
+    "typescript": "~4.0.0"
   },
   "files": [
-    "build/src"
+    "dist"
   ],
   "c8": {
     "exclude": [
-      "build/test"
+      "build/test",
+      "dist"
     ]
   },
   "browserslist": "> 1%, last 2 versions, Firefox ESR"
