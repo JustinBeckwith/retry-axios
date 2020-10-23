@@ -36,7 +36,11 @@ describe('retry-axios', () => {
       for (const method of config!.httpMethodsToRetry!) {
         assert(expectedMethods.indexOf(method) > -1, 'exected method: $method');
       }
-      const expectedStatusCodes = [[100, 199], [429, 429], [500, 599]];
+      const expectedStatusCodes = [
+        [100, 199],
+        [429, 429],
+        [500, 599],
+      ];
       const statusCodesToRetry = config!.statusCodesToRetry!;
       for (let i = 0; i < statusCodesToRetry.length; i++) {
         const [min, max] = statusCodesToRetry[i];
