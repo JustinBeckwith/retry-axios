@@ -232,7 +232,7 @@ describe('retry-axios', () => {
             const cfg = rax.getConfig(err);
             assert.strictEqual(cfg!.currentRetryAttempt, 1);
             flipped = true;
-            resolve();
+            resolve(undefined);
           });
         },
       },
