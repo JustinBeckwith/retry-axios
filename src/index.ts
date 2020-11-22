@@ -133,7 +133,10 @@ function onError(err: AxiosError) {
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry =
     config.retry === undefined || config.retry === null ? 3 : config.retry;
-  config.retryDelay = config.retryDelay ?? 100;
+  config.retryDelay =
+    config.retryDelay === undefined || config.retryDelay === null
+      ? 100
+      : config.retryDelay;
   config.instance = config.instance || axios;
   config.backoffType = config.backoffType || 'exponential';
   config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
