@@ -342,4 +342,58 @@ describe('retry-axios', () => {
     }
     assert.strictEqual(scopes[1].isDone(), false);
   });
+
+  it('should accept 0 for config.retryDelay', async () => {
+    const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    interceptorId = rax.attach();
+    const config: AxiosRequestConfig = {
+      url,
+      raxConfig: {retryDelay: 0},
+    };
+    try {
+      await axios(config);
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.strictEqual(cfg!.retryDelay, 0);
+      scope.isDone();
+      return;
+    }
+    assert.fail('Expected to throw');
+  });
+
+  it('should accept 0 for config.retry', async () => {
+    const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    interceptorId = rax.attach();
+    const config: AxiosRequestConfig = {
+      url,
+      raxConfig: {retry: 0},
+    };
+    try {
+      await axios(config);
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.strictEqual(cfg!.retry, 0);
+      scope.isDone();
+      return;
+    }
+    assert.fail('Expected to throw');
+  });
+
+  it('should accept 0 for config.noResponseRetries', async () => {
+    const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+    interceptorId = rax.attach();
+    const config: AxiosRequestConfig = {
+      url,
+      raxConfig: {noResponseRetries: 0},
+    };
+    try {
+      await axios(config);
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.strictEqual(cfg!.noResponseRetries, 0);
+      scope.isDone();
+      return;
+    }
+    assert.fail('Expected to throw');
+  });
 });
