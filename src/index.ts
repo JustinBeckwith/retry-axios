@@ -131,12 +131,9 @@ function onError(err: AxiosError) {
 
   const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
-  config.retry =
-    config.retry === undefined || config.retry === null ? 3 : config.retry;
+  config.retry = typeof config.retry === 'number' ? config.retry : 3;
   config.retryDelay =
-    config.retryDelay === undefined || config.retryDelay === null
-      ? 100
-      : config.retryDelay;
+    typeof config.retryDelay === 'number' ? config.retryDelay : 100;
   config.instance = config.instance || axios;
   config.backoffType = config.backoffType || 'exponential';
   config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
@@ -147,9 +144,7 @@ function onError(err: AxiosError) {
     'DELETE',
   ];
   config.noResponseRetries =
-    config.noResponseRetries === undefined || config.noResponseRetries === null
-      ? 2
-      : config.noResponseRetries;
+    typeof config.noResponseRetries === 'number' ? config.noResponseRetries : 2;
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
