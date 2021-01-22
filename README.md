@@ -63,7 +63,7 @@ const res = await axios({
     // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
     noResponseRetries: 2,
 
-    // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static' 
+    // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static'
     retryDelay: 100,
 
     // HTTP methods to automatically retry.  Defaults to:
@@ -140,7 +140,7 @@ const res = await axios({
     shouldRetry: err => {
       const cfg = rax.getConfig(err);
       if (cfg.currentRetryAttempt >= cfg.retry) return false // ensure max retries is always respected
-  
+
       // Always retry this status text, regardless of code or request type
       if (err.response.statusText.includes('Try again')) return true
 
@@ -149,7 +149,7 @@ const res = await axios({
     }
   }
 });
-``` 
+```
 
 ## How it works
 
@@ -161,7 +161,7 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 
 [github-image]: https://github.com/JustinBeckwith/retry-axios/workflows/ci/badge.svg
 [github-url]: https://github.com/JustinBeckwith/retry-axios/actions/
-[codecov-image]: https://codecov.io/gh/JustinBeckwith/retry-axios/branch/master/graph/badge.svg
+[codecov-image]: https://codecov.io/gh/JustinBeckwith/retry-axios/branch/main/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/JustinBeckwith/retry-axios
 [david-image]: https://david-dm.org/JustinBeckwith/retry-axios.svg
 [david-url]: https://david-dm.org/JustinBeckwith/retry-axios
@@ -171,3 +171,5 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 [npm-url]: https://npmjs.org/package/retry-axios
 [snyk-image]: https://snyk.io/test/github/JustinBeckwith/retry-axios/badge.svg
 [snyk-url]: https://snyk.io/test/github/JustinBeckwith/retry-axios
+
+![David](https://img.shields.io/david/JustinBeckwith/retry-axios)
