@@ -46,7 +46,7 @@
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
     "c8": "^7.0.0",
     "gts": "^3.0.0",
-    "js-green-licenses": "^2.0.0",
+    "js-green-licenses": "^3.0.0",
     "microbundle": "^0.11.0",
     "mocha": "^8.0.0",
     "nock": "^13.0.0",
