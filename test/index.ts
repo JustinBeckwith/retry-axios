@@ -32,6 +32,8 @@ describe('retry-axios', () => {
       assert.strictEqual(config!.retryDelay, 100, 'retryDelay');
       assert.strictEqual(config!.instance, axios, 'axios');
       assert.strictEqual(config!.backoffType, 'exponential', 'backoffType');
+      assert.strictEqual(config!.checkRetryAfter, true);
+      assert.strictEqual(config!.maxRetryAfter, 60000 * 5);
       const expectedMethods = ['GET', 'HEAD', 'PUT', 'OPTIONS', 'DELETE'];
       for (const method of config!.httpMethodsToRetry!) {
         assert(expectedMethods.indexOf(method) > -1, 'exected method: $method');
@@ -392,6 +394,34 @@ describe('retry-axios', () => {
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.noResponseRetries, 0);
       scope.isDone();
+      return;
+    }
+    assert.fail('Expected to throw');
+  });
+
+  it('should parse Retry-After header for retry delay if available', async () => {
+    const scopes = [
+      nock(url).get('/').reply(429, undefined, {'Retry-After': '1'}),
+      nock(url).get('/').reply(200, 'toast'),
+    ];
+    interceptorId = rax.attach();
+    const res = await axios({url});
+    assert.strictEqual(res.data, 'toast');
+    scopes.forEach(s => s.done());
+  });
+
+  it('should not retry if Retry-After value greater than maxRetryAfter', async () => {
+    const scope = nock(url)
+      .get('/')
+      .reply(429, undefined, {'Retry-After': '2'});
+    interceptorId = rax.attach();
+    try {
+      const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
+      await axios(cfg);
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.strictEqual(0, cfg!.currentRetryAttempt);
+      scope.done();
       return;
     }
     assert.fail('Expected to throw');
