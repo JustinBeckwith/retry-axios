@@ -47,7 +47,7 @@
     "c8": "^7.0.0",
     "gts": "^3.0.0",
     "js-green-licenses": "^3.0.0",
-    "microbundle": "^0.11.0",
+    "microbundle": "^0.13.0",
     "mocha": "^8.0.0",
     "nock": "^13.0.0",
     "semantic-release": "^17.0.4",
