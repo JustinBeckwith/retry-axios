@@ -5,6 +5,7 @@ import * as sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
 import * as rax from '../src';
 import {RaxConfig} from '../src';
+import 'mocha';
 
 const url = 'http://test.local';
 
@@ -401,8 +402,7 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
-  it('should retry with Retry-After header in seconds', async function () {
-    this.timeout(1000); // Short timeout to trip test if delay longer than expected
+  it('should retry with Retry-After header in seconds', async () => {
     const scopes = [
       nock(url).get('/').reply(429, undefined, {
         'Retry-After': '5',
@@ -427,10 +427,9 @@ describe('retry-axios', () => {
     const res = await axiosPromise;
     assert.strictEqual(res.data, 'toast');
     scopes.forEach(s => s.done());
-  });
+  }).timeout(1000);
 
-  it('should retry with Retry-After header in http datetime', async function () {
-    this.timeout(1000);
+  it('should retry with Retry-After header in http datetime', async () => {
     const scopes = [
       nock(url).get('/').reply(429, undefined, {
         'Retry-After': 'Thu, 01 Jan 1970 00:00:05 UTC',
@@ -455,7 +454,7 @@ describe('retry-axios', () => {
     const res = await axiosPromise;
     assert.strictEqual(res.data, 'toast');
     scopes.forEach(s => s.done());
-  });
+  }).timeout(1000);
 
   it('should not retry if Retry-After greater than maxRetryAfter', async () => {
     const scopes = [
