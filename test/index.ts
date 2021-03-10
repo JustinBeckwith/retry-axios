@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import axios, {AxiosRequestConfig} from 'axios';
 import * as nock from 'nock';
+import * as sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
 import * as rax from '../src';
 import {RaxConfig} from '../src';
@@ -12,6 +13,7 @@ nock.disableNetConnect();
 describe('retry-axios', () => {
   let interceptorId: number | undefined;
   afterEach(() => {
+    sinon.restore();
     nock.cleanAll();
     if (interceptorId !== undefined) {
       rax.detach(interceptorId);
@@ -399,31 +401,78 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
-  it('should parse Retry-After header for retry delay if available', async () => {
+  it('should retry with Retry-After header in seconds', async () => {
     const scopes = [
-      nock(url).get('/').reply(429, undefined, {'Retry-After': '1'}),
+      nock(url).get('/').reply(429, undefined, {
+        'Retry-After': '5',
+      }),
       nock(url).get('/').reply(200, 'toast'),
     ];
     interceptorId = rax.attach();
-    const res = await axios({url});
+    const {promise, resolve} = invertedPromise();
+    const clock = sinon.useFakeTimers({
+      shouldAdvanceTime: true, // Otherwise interferes with nock
+    });
+    const axiosPromise = axios({
+      url,
+      raxConfig: {
+        onRetryAttempt: resolve,
+        retryDelay: 10000, // Higher default to ensure Retry-After is used
+        backoffType: 'static',
+      },
+    });
+    await promise;
+    clock.tick(5000); // Advance clock by expected retry delay
+    const res = await axiosPromise;
     assert.strictEqual(res.data, 'toast');
     scopes.forEach(s => s.done());
-  });
+  }).timeout(1000); // Short timeout to trip test if delay longer than expected
 
-  it('should not retry if Retry-After value greater than maxRetryAfter', async () => {
-    const scope = nock(url)
-      .get('/')
-      .reply(429, undefined, {'Retry-After': '2'});
+  it('should retry with Retry-After header in http datetime', async () => {
+    const scopes = [
+      nock(url).get('/').reply(429, undefined, {
+        'Retry-After': 'Thu, 01 Jan 1970 00:00:05 UTC',
+      }),
+      nock(url).get('/').reply(200, 'toast'),
+    ];
     interceptorId = rax.attach();
-    try {
-      const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
-      await axios(cfg);
-    } catch (e) {
-      const cfg = rax.getConfig(e);
-      assert.strictEqual(0, cfg!.currentRetryAttempt);
-      scope.done();
-      return;
-    }
-    assert.fail('Expected to throw');
+    const {promise, resolve} = invertedPromise();
+    const clock = sinon.useFakeTimers({
+      shouldAdvanceTime: true,
+    });
+    const axiosPromise = axios({
+      url,
+      raxConfig: {
+        onRetryAttempt: resolve,
+        backoffType: 'static',
+        retryDelay: 10000,
+      },
+    });
+    await promise;
+    clock.tick(5000);
+    const res = await axiosPromise;
+    assert.strictEqual(res.data, 'toast');
+    scopes.forEach(s => s.done());
+  }).timeout(1000);
+
+  it('should not retry if Retry-After greater than maxRetryAfter', async () => {
+    const scopes = [
+      nock(url).get('/').reply(429, undefined, {'Retry-After': '2'}),
+      nock(url).get('/').reply(200, 'toast'),
+    ];
+    interceptorId = rax.attach();
+    const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
+    await assert.rejects(axios(cfg));
+    assert.strictEqual(scopes[1].isDone(), false);
   });
 });
+
+function invertedPromise() {
+  let resolve!: () => void;
+  let reject!: (err: Error) => void;
+  const promise = new Promise<void>((innerResolve, innerReject) => {
+    resolve = innerResolve;
+    reject = innerReject;
+  });
+  return {promise, resolve, reject};
+}

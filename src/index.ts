@@ -142,14 +142,14 @@ function normalizeArray<T>(obj?: T[]): T[] | undefined {
  */
 function parseRetryAfter(header: string): number | undefined {
   // Header value may be string containing integer seconds
-  const value = parseInt(header);
+  const value = Number(header);
   if (!Number.isNaN(value)) {
     return value * 1000;
   }
   // Or HTTP date time string
   const dateTime = Date.parse(header);
   if (!Number.isNaN(dateTime)) {
-    return dateTime - Date.now() + 3000; // Add 3sec buffer
+    return dateTime - Date.now();
   }
   return undefined;
 }

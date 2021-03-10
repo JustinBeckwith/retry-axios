@@ -42,6 +42,7 @@
     "@babel/preset-env": "^7.4.5",
     "@types/mocha": "^8.0.0",
     "@types/node": "^12.0.4",
+    "@types/sinon": "^9.0.10",
     "axios": "^0.21.0",
     "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
     "c8": "^7.0.0",
@@ -51,6 +52,7 @@
     "mocha": "^8.0.0",
     "nock": "^13.0.0",
     "semantic-release": "^17.0.4",
+    "sinon": "^9.2.4",
     "typescript": "~4.1.0"
   },
   "files": [
