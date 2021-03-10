@@ -5,7 +5,6 @@ import * as sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
 import * as rax from '../src';
 import {RaxConfig} from '../src';
-import 'mocha';
 
 const url = 'http://test.local';
 
@@ -83,7 +82,8 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
-  it('should retry at least the configured number of times', async () => {
+  it('should retry at least the configured number of times', async function () {
+    this.timeout(10000);
     const scopes = [
       nock(url).get('/').times(3).reply(500),
       nock(url).get('/').reply(200, 'milk'),
@@ -93,7 +93,7 @@ describe('retry-axios', () => {
     const res = await axios(cfg);
     assert.strictEqual(res.data, 'milk');
     scopes.forEach(s => s.done());
-  }).timeout(10000);
+  });
 
   it('should not retry more than configured', async () => {
     const scope = nock(url).get('/').twice().reply(500);
@@ -402,7 +402,8 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
-  it('should retry with Retry-After header in seconds', async () => {
+  it('should retry with Retry-After header in seconds', async function () {
+    this.timeout(1000); // Short timeout to trip test if delay longer than expected
     const scopes = [
       nock(url).get('/').reply(429, undefined, {
         'Retry-After': '5',
@@ -427,9 +428,10 @@ describe('retry-axios', () => {
     const res = await axiosPromise;
     assert.strictEqual(res.data, 'toast');
     scopes.forEach(s => s.done());
-  }).timeout(1000);
+  });
 
-  it('should retry with Retry-After header in http datetime', async () => {
+  it('should retry with Retry-After header in http datetime', async function () {
+    this.timeout(1000);
     const scopes = [
       nock(url).get('/').reply(429, undefined, {
         'Retry-After': 'Thu, 01 Jan 1970 00:00:05 UTC',
@@ -454,7 +456,7 @@ describe('retry-axios', () => {
     const res = await axiosPromise;
     assert.strictEqual(res.data, 'toast');
     scopes.forEach(s => s.done());
-  }).timeout(1000);
+  });
 
   it('should not retry if Retry-After greater than maxRetryAfter', async () => {
     const scopes = [
