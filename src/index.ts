@@ -60,6 +60,16 @@ export interface RetryConfig {
    * Backoff Type; 'linear', 'static' or 'exponential'.
    */
   backoffType?: 'linear' | 'static' | 'exponential';
+
+  /**
+   * Whether to check for 'Retry-After' header in response and use value as delay. Defaults to true.
+   */
+  checkRetryAfter?: boolean;
+
+  /**
+   * Max permitted Retry-After value (in ms) - rejects if greater. Defaults to 5 mins.
+   */
+  maxRetryAfter?: number;
 }
 
 export type RaxConfig = {
@@ -124,6 +134,26 @@ function normalizeArray<T>(obj?: T[]): T[] | undefined {
   return arr;
 }
 
+/**
+ * Parse the Retry-After header.
+ * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After
+ * @param header Retry-After header value
+ * @returns Number of milliseconds, or undefined if invalid
+ */
+function parseRetryAfter(header: string): number | undefined {
+  // Header value may be string containing integer seconds
+  const value = Number(header);
+  if (!Number.isNaN(value)) {
+    return value * 1000;
+  }
+  // Or HTTP date time string
+  const dateTime = Date.parse(header);
+  if (!Number.isNaN(dateTime)) {
+    return dateTime - Date.now();
+  }
+  return undefined;
+}
+
 function onError(err: AxiosError) {
   if (axios.isCancel(err)) {
     return Promise.reject(err);
@@ -145,6 +175,10 @@ function onError(err: AxiosError) {
   ];
   config.noResponseRetries =
     typeof config.noResponseRetries === 'number' ? config.noResponseRetries : 2;
+  config.checkRetryAfter =
+    typeof config.checkRetryAfter === 'boolean' ? config.checkRetryAfter : true;
+  config.maxRetryAfter =
+    typeof config.maxRetryAfter === 'number' ? config.maxRetryAfter : 60000 * 5;
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
@@ -174,18 +208,32 @@ function onError(err: AxiosError) {
   }
 
   // Create a promise that invokes the retry after the backOffDelay
-  const onBackoffPromise = new Promise(resolve => {
-    // Calculate time to wait with exponential backoff.
-    // Formula: (2^c - 1 / 2) * 1000
-    let delay: number;
-    if (config.backoffType === 'linear') {
-      delay = config.currentRetryAttempt! * 1000;
-    } else if (config.backoffType === 'static') {
-      delay = config.retryDelay!;
-    } else {
-      delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+  const onBackoffPromise = new Promise((resolve, reject) => {
+    let delay = 0;
+    // If enabled, check for 'Retry-After' header in response to use as delay
+    if (
+      config.checkRetryAfter &&
+      err.response &&
+      err.response.headers['retry-after']
+    ) {
+      const retryAfter = parseRetryAfter(err.response.headers['retry-after']);
+      if (retryAfter && retryAfter > 0 && retryAfter <= config.maxRetryAfter!) {
+        delay = retryAfter;
+      } else {
+        return reject(err);
+      }
     }
-
+    // Else calculate delay according to chosen strategy
+    // Default to exponential backoff - formula: (2^c - 1 / 2) * 1000
+    else {
+      if (config.backoffType === 'linear') {
+        delay = config.currentRetryAttempt! * 1000;
+      } else if (config.backoffType === 'static') {
+        delay = config.retryDelay!;
+      } else {
+        delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+      }
+    }
     // We're going to retry!  Incremenent the counter.
     (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
     setTimeout(resolve, delay);
