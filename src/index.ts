@@ -82,9 +82,12 @@ export type RaxConfig = {
  * interceptor.
  * @returns The id of the interceptor attached to the axios instance.
  */
-export function attach(instance?: AxiosInstance) {
+export function attach(
+  instance?: AxiosInstance,
+  onSuccess?: (res: AxiosResponse) => AxiosResponse
+) {
   instance = instance || axios;
-  return instance.interceptors.response.use(onFulfilled, onError);
+  return instance.interceptors.response.use(onSuccess || onFulfilled, onError);
 }
 
 /**
