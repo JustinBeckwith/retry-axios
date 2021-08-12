@@ -157,10 +157,6 @@ function parseRetryAfter(header: string): number | undefined {
 }
 
 function onError(err: AxiosError) {
-  if (axios.isCancel(err)) {
-    return Promise.reject(err);
-  }
-
   const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry = typeof config.retry === 'number' ? config.retry : 3;
