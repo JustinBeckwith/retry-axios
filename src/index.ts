@@ -47,6 +47,11 @@ export interface RetryConfig {
   onRetryAttempt?: (err: AxiosError) => void;
 
   /**
+   * Function to invoke when all retries fail.
+   */
+  onFail?: (err: AxiosError) => void;
+
+  /**
    * Function to invoke which determines if you should retry
    */
   shouldRetry?: (err: AxiosError) => boolean;
@@ -179,6 +184,7 @@ function onError(err: AxiosError) {
     typeof config.checkRetryAfter === 'boolean' ? config.checkRetryAfter : true;
   config.maxRetryAfter =
     typeof config.maxRetryAfter === 'number' ? config.maxRetryAfter : 60000 * 5;
+  config.onFail = config.onFail || (() => {});
 
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
@@ -203,8 +209,14 @@ function onError(err: AxiosError) {
 
   // Determine if we should retry the request
   const shouldRetryFn = config.shouldRetry || shouldRetryRequest;
-  if (!shouldRetryFn(err)) {
-    return Promise.reject(err);
+  if (axios.isCancel(err) || !shouldRetryFn(err)) {
+    try {
+      config.onFail(err);
+      return Promise.reject(err);
+    } catch (e) {
+      console.warn('An error occurred in onFail().');
+      return Promise.reject(err);
+    }
   }
 
   // Create a promise that invokes the retry after the backOffDelay
