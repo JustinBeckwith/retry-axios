@@ -297,11 +297,7 @@ export function shouldRetryRequest(err: AxiosError) {
 
   // If we are out of retry attempts, return
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
-  if (config.currentRetryAttempt >= config.retry!) {
-    return false;
-  }
-
-  return true;
+  return config.currentRetryAttempt < config.retry!;
 }
 
 /**
