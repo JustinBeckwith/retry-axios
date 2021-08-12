@@ -282,14 +282,8 @@ export function shouldRetryRequest(err: AxiosError) {
   // If this wasn't in the list of status codes where we want
   // to automatically retry, return.
   if (err.response && err.response.status) {
-    let isInRange = false;
-    for (const [min, max] of config.statusCodesToRetry!) {
-      const status = err.response.status;
-      if (status >= min && status <= max) {
-        isInRange = true;
-        break;
-      }
-    }
+    const status = err.response.status;
+    const isInRange = config.statusCodesToRetry!.some(([min, max]) => min <= status && status <= max);
     if (!isInRange) {
       return false;
     }
