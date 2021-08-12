@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import axios, {AxiosRequestConfig} from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios'
 import * as nock from 'nock';
 import * as sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
@@ -467,6 +467,51 @@ describe('retry-axios', () => {
     const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
     await assert.rejects(axios(cfg));
     assert.strictEqual(scopes[1].isDone(), false);
+  });
+
+  it('should config.onFail() called if all retry failed', async () => {
+    const scope = nock(url).get('/').times(2).reply(500, {errorMessage: 'ErrorMessage'});
+    const onFail = sinon.spy((_: AxiosError) => {})
+    interceptorId = rax.attach();
+    const cfg: rax.RaxConfig = { url, raxConfig: {retry: 1, onFail}};
+    try {
+      await axios(cfg);
+    } catch (e) {
+      sinon.assert.calledOnce(onFail);
+      sinon.assert.calledOnceWithExactly(onFail, e);
+    }
+
+    scope.done()
+  });
+
+  it('should throw error in onFail() called if all retry failed when the network is unavailable', async () => {
+    nock.disableNetConnect()
+    const onFail = sinon.spy((_: AxiosError) => {})
+    interceptorId = rax.attach();
+    const cfg: rax.RaxConfig = { url, raxConfig: {onFail}};
+    try {
+      await axios(cfg);
+    } catch (e) {
+      sinon.assert.calledOnce(onFail);
+      sinon.assert.calledOnceWithExactly(onFail, e);
+    }
+  });
+
+  it('should throw the error by axios to the caller, if an error occurs in onFail()', async () => {
+    const scope = nock(url).get('/').times(2).reply(500, {errorMessage: 'ErrorMessage'});
+    const errorThrownByOnFail = new Error('Error in onFail()')
+    const onFail = sinon.spy((_: AxiosError) => {throw errorThrownByOnFail})
+    interceptorId = rax.attach();
+    const cfg: rax.RaxConfig = { url, raxConfig: {retry: 1, onFail}};
+    // await assert.rejects(axios(cfg))
+    try {
+      await axios(cfg);
+    } catch (e) {
+      sinon.assert.calledOnce(onFail);
+      assert.notDeepStrictEqual(e, errorThrownByOnFail);
+      assert.deepStrictEqual(e.response.data, {errorMessage: 'ErrorMessage'});
+    }
+    scope.done()
   });
 });
 
