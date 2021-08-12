@@ -87,6 +87,12 @@ const res = await axios({
     onRetryAttempt: err => {
       const cfg = rax.getConfig(err);
       console.log(`Retry attempt #${cfg.currentRetryAttempt}`);
+    },
+    
+    // Function to invoke when all retries fail.
+    onFail: err => {
+      // you can send log to logging server
+      // also, display toast message
     }
   }
 });
