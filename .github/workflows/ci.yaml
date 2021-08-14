@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - $default-branch
+      - main
   pull_request:
 name: ci
 jobs:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [10, 12, 14, 15]
+        node: [10, 12, 14, 16]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -24,7 +24,7 @@ jobs:
       - run: npm install
       - run: npm test
       - name: coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           name: actions ${{ matrix.node }}
   lint:
