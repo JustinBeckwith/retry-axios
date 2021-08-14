@@ -229,7 +229,7 @@ function onError(err: AxiosError) {
       }
     }
     // Else calculate delay according to chosen strategy
-    // Default to exponential backoff - formula: (2^c - 1 / 2) * 1000
+    // Default to exponential backoff - formula: ((2^c - 1) / 2) * 1000
     else {
       if (config.backoffType === 'linear') {
         delay = config.currentRetryAttempt! * 1000;
