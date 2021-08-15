@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios'
+import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
@@ -470,10 +470,14 @@ describe('retry-axios', () => {
   });
 
   it('should config.onFail() called if all retry failed', async () => {
-    const scope = nock(url).get('/').times(2).reply(500, {errorMessage: 'ErrorMessage'});
-    const onFail = sinon.spy((_: AxiosError) => {})
+    const scope = nock(url)
+      .get('/')
+      .times(2)
+      .reply(500, {errorMessage: 'ErrorMessage'});
+    /* eslint @typescript-eslint/no-unused-vars: 0 */
+    const onFail = sinon.spy((_: AxiosError) => {});
     interceptorId = rax.attach();
-    const cfg: rax.RaxConfig = { url, raxConfig: {retry: 1, onFail}};
+    const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1, onFail}};
     try {
       await axios(cfg);
     } catch (e) {
@@ -481,14 +485,15 @@ describe('retry-axios', () => {
       sinon.assert.calledOnceWithExactly(onFail, e);
     }
 
-    scope.done()
+    scope.done();
   });
 
   it('should throw error in onFail() called if all retry failed when the network is unavailable', async () => {
-    nock.disableNetConnect()
-    const onFail = sinon.spy((_: AxiosError) => {})
+    nock.disableNetConnect();
+    /* eslint @typescript-eslint/no-unused-vars: 0 */
+    const onFail = sinon.spy((_: AxiosError) => {});
     interceptorId = rax.attach();
-    const cfg: rax.RaxConfig = { url, raxConfig: {onFail}};
+    const cfg: rax.RaxConfig = {url, raxConfig: {onFail}};
     try {
       await axios(cfg);
     } catch (e) {
@@ -498,12 +503,17 @@ describe('retry-axios', () => {
   });
 
   it('should throw the error by axios to the caller, if an error occurs in onFail()', async () => {
-    const scope = nock(url).get('/').times(2).reply(500, {errorMessage: 'ErrorMessage'});
-    const errorThrownByOnFail = new Error('Error in onFail()')
-    const onFail = sinon.spy((_: AxiosError) => {throw errorThrownByOnFail})
+    const scope = nock(url)
+      .get('/')
+      .times(2)
+      .reply(500, {errorMessage: 'ErrorMessage'});
+    const errorThrownByOnFail = new Error('Error in onFail()');
+    /* eslint @typescript-eslint/no-unused-vars: 0 */
+    const onFail = sinon.spy((_: AxiosError) => {
+      throw errorThrownByOnFail;
+    });
     interceptorId = rax.attach();
-    const cfg: rax.RaxConfig = { url, raxConfig: {retry: 1, onFail}};
-    // await assert.rejects(axios(cfg))
+    const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1, onFail}};
     try {
       await axios(cfg);
     } catch (e) {
@@ -511,7 +521,7 @@ describe('retry-axios', () => {
       assert.notDeepStrictEqual(e, errorThrownByOnFail);
       assert.deepStrictEqual(e.response.data, {errorMessage: 'ErrorMessage'});
     }
-    scope.done()
+    scope.done();
   });
 });
 

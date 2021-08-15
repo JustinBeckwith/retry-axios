@@ -288,7 +288,9 @@ export function shouldRetryRequest(err: AxiosError) {
   // to automatically retry, return.
   if (err.response && err.response.status) {
     const status = err.response.status;
-    const isInRange = config.statusCodesToRetry!.some(([min, max]) => min <= status && status <= max);
+    const isInRange = config.statusCodesToRetry!.some(
+      ([min, max]) => min <= status && status <= max
+    );
     if (!isInRange) {
       return false;
     }
