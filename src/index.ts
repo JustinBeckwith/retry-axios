@@ -239,20 +239,24 @@ function onError(err: AxiosError) {
     // below.
     (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
 
+    // store with shorter and more expressive variable name.
+    const retrycount = (err.config as RaxConfig).raxConfig!
+      .currentRetryAttempt!;
+
     // Calculate delay according to chosen strategy
     // Default to exponential backoff - formula: ((2^c - 1) / 2) * 1000
     if (delay === 0) {
       // was not set by Retry-After logic
       if (config.backoffType === 'linear') {
-        // The delay between the first (actual) attempt and the
-        // first retry should be non-zero. That is, by definition
-        // config.currentRetryAttempt must equal to 1 for the first
-        // retry (was once 0-based, which is a bug -- see #122).
-        delay = config.currentRetryAttempt! * 1000;
+        // The delay between the first (actual) attempt and the first retry
+        // should be non-zero. Rely on the convention that `retrycount` is
+        // equal to 1 for the first retry when we are in here (was once 0,
+        // which was a bug -- see #122).
+        delay = retrycount * 1000;
       } else if (config.backoffType === 'static') {
         delay = config.retryDelay!;
       } else {
-        delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+        delay = ((Math.pow(2, retrycount) - 1) / 2) * 1000;
       }
     }
     setTimeout(resolve, delay);
