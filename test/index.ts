@@ -109,6 +109,49 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
+  it('should have non-zero delay between first and second attempt, static backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'static',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between attempts using the
+    // static backoff strategy is 100 ms. Test with tolerance.
+    assert.strict(
+      0.16 > delayInSeconds && delayInSeconds > 0.1,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
+  });
+
+    process.stdout.write(`\n\n ${requesttimes}\n\n`);
+  });
+
   it('should accept a new axios instance', async () => {
     const scopes = [
       nock(url).get('/').times(2).reply(500),
