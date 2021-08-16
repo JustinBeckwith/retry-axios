@@ -224,10 +224,20 @@ function onError(err: AxiosError) {
       }
     }
 
-    // Now it's certain that a retry is supposed to happen.
-    // Incremenent the counter, critical for linear and exp
-    // backoff delay calc.
-    config.currentRetryAttempt! += 1;
+    // Now it's certain that a retry is supposed to happen. Incremenent the
+    // counter, critical for linear and exp backoff delay calc. Note that
+    // `config.currentRetryAttempt` is local to this function whereas
+    // `(err.config as RaxConfig).raxConfig` is state that is tranferred across
+    // retries. That is, we want to mutate `(err.config as
+    // RaxConfig).raxConfig`. Another important note is about the definition of
+    // `currentRetryAttempt`: When we are here becasue the first and actual
+    // HTTP request attempt failed then `currentRetryAttempt` is still zero. We
+    // have found that a retry is indeed required. Since that is (will be)
+    // indeed the first retry it makes sense to now increase
+    // `currentRetryAttempt` by 1. So that it is in fact 1 for the first retry
+    // (as opposed to 0 or 2); an intuitive convention to use for the math
+    // below.
+    (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
 
     // Calculate delay according to chosen strategy
     // Default to exponential backoff - formula: ((2^c - 1) / 2) * 1000
