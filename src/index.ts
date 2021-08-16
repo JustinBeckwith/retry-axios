@@ -227,11 +227,12 @@ function onError(err: AxiosError) {
     // Now it's certain that a retry is supposed to happen.
     // Incremenent the counter, critical for linear and exp
     // backoff delay calc.
-    (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
+    config.currentRetryAttempt! += 1;
 
     // Calculate delay according to chosen strategy
     // Default to exponential backoff - formula: ((2^c - 1) / 2) * 1000
-    if (delay === 0) { // was not set by Retry-After logic
+    if (delay === 0) {
+      // was not set by Retry-After logic
       if (config.backoffType === 'linear') {
         // The delay between the first (actual) attempt and the
         // first retry should be non-zero. That is, by definition
