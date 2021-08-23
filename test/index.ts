@@ -468,6 +468,33 @@ describe('retry-axios', () => {
     await assert.rejects(axios(cfg));
     assert.strictEqual(scopes[1].isDone(), false);
   });
+
+  it('should use maxRetryDelay', async function () {
+    this.timeout(1000); // Short timeout to trip test if delay longer than expected
+    const scopes = [
+      nock(url).get('/').reply(429, undefined),
+      nock(url).get('/').reply(200, 'toast'),
+    ];
+    interceptorId = rax.attach();
+    const {promise, resolve} = invertedPromise();
+    const clock = sinon.useFakeTimers({
+      shouldAdvanceTime: true, // Otherwise interferes with nock
+    });
+    const axiosPromise = axios({
+      url,
+      raxConfig: {
+        onRetryAttempt: resolve,
+        retryDelay: 10000, // Higher default to ensure maxRetryDelay is used
+        maxRetryDelay: 5000,
+        backoffType: 'exponential',
+      },
+    });
+    await promise;
+    clock.tick(5000); // Advance clock by expected retry delay
+    const res = await axiosPromise;
+    assert.strictEqual(res.data, 'toast');
+    scopes.forEach(s => s.done());
+  });
 });
 
 function invertedPromise() {

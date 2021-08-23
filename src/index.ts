@@ -70,6 +70,11 @@ export interface RetryConfig {
    * Max permitted Retry-After value (in ms) - rejects if greater. Defaults to 5 mins.
    */
   maxRetryAfter?: number;
+
+  /**
+   * Ceiling for calculated delay (in ms) - delay will not exceed this value.
+   */
+  maxRetryDelay?: number;
 }
 
 export type RaxConfig = {
@@ -232,6 +237,9 @@ function onError(err: AxiosError) {
         delay = config.retryDelay!;
       } else {
         delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+      }
+      if (typeof config.maxRetryDelay === 'number') {
+        delay = Math.min(delay, config.maxRetryDelay);
       }
     }
     // We're going to retry!  Incremenent the counter.
