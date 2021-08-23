@@ -228,22 +228,45 @@ function onError(err: AxiosError) {
         return reject(err);
       }
     }
-    // Else calculate delay according to chosen strategy
+
+    // Now it's certain that a retry is supposed to happen. Incremenent the
+    // counter, critical for linear and exp backoff delay calc. Note that
+    // `config.currentRetryAttempt` is local to this function whereas
+    // `(err.config as RaxConfig).raxConfig` is state that is tranferred across
+    // retries. That is, we want to mutate `(err.config as
+    // RaxConfig).raxConfig`. Another important note is about the definition of
+    // `currentRetryAttempt`: When we are here becasue the first and actual
+    // HTTP request attempt failed then `currentRetryAttempt` is still zero. We
+    // have found that a retry is indeed required. Since that is (will be)
+    // indeed the first retry it makes sense to now increase
+    // `currentRetryAttempt` by 1. So that it is in fact 1 for the first retry
+    // (as opposed to 0 or 2); an intuitive convention to use for the math
+    // below.
+    (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
+
+    // store with shorter and more expressive variable name.
+    const retrycount = (err.config as RaxConfig).raxConfig!
+      .currentRetryAttempt!;
+
+    // Calculate delay according to chosen strategy
     // Default to exponential backoff - formula: ((2^c - 1) / 2) * 1000
-    else {
+    if (delay === 0) {
+      // was not set by Retry-After logic
       if (config.backoffType === 'linear') {
-        delay = config.currentRetryAttempt! * 1000;
+        // The delay between the first (actual) attempt and the first retry
+        // should be non-zero. Rely on the convention that `retrycount` is
+        // equal to 1 for the first retry when we are in here (was once 0,
+        // which was a bug -- see #122).
+        delay = retrycount * 1000;
       } else if (config.backoffType === 'static') {
         delay = config.retryDelay!;
       } else {
-        delay = ((Math.pow(2, config.currentRetryAttempt!) - 1) / 2) * 1000;
+        delay = ((Math.pow(2, retrycount) - 1) / 2) * 1000;
       }
       if (typeof config.maxRetryDelay === 'number') {
         delay = Math.min(delay, config.maxRetryDelay);
       }
     }
-    // We're going to retry!  Incremenent the counter.
-    (err.config as RaxConfig).raxConfig!.currentRetryAttempt! += 1;
     setTimeout(resolve, delay);
   });
 

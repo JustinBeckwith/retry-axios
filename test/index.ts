@@ -109,6 +109,126 @@ describe('retry-axios', () => {
     assert.fail('Expected to throw');
   });
 
+  it('should have non-zero delay between first and second attempt, static backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'static',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between attempts using the
+    // static backoff strategy is 100 ms. Test with tolerance.
+    assert.strict(
+      0.16 > delayInSeconds && delayInSeconds > 0.1,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
+  });
+
+  it('should have non-zero delay between first and second attempt, linear backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'linear',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between the first two attempts using the
+    // linear backoff strategy is 1000 ms. Test with tolerance.
+    assert.strict(
+      1.1 > delayInSeconds && delayInSeconds > 1.0,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
+  });
+
+  it('should have non-zero delay between first and second attempt, exp backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply((_, __) => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'exponential',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between attempts using the
+    // exp backoff strategy is 500 ms. Test with tolerance.
+    assert.strict(
+      0.55 > delayInSeconds && delayInSeconds > 0.5,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
+  });
+
   it('should accept a new axios instance', async () => {
     const scopes = [
       nock(url).get('/').times(2).reply(500),
