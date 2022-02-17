@@ -468,6 +468,23 @@ describe('retry-axios', () => {
     assert.strictEqual(scopes[1].isDone(), false);
   });
 
+  it('should throw error when requests have been canceled', async () => {
+    try {
+      interceptorId = rax.attach();
+      const src = axios.CancelToken.source();
+      const cfg: rax.RaxConfig = {
+        url,
+        raxConfig: {retry: 2},
+        cancelToken: src.token,
+      };
+      const req = axios(cfg);
+      src.cancel();
+      await req;
+    } catch (err) {
+      assert.strictEqual(axios.isCancel(err), true);
+    }
+  });
+
   it('should accept 0 for config.retryDelay', async () => {
     const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
     interceptorId = rax.attach();
@@ -614,6 +631,15 @@ describe('retry-axios', () => {
     const res = await axiosPromise;
     assert.strictEqual(res.data, 'toast');
     scopes.forEach(s => s.done());
+  });
+
+  it('should not exist config from AxiosError if there is no request config', async () => {
+    try {
+      await axios({});
+    } catch (e) {
+      const cfg = rax.getConfig(e);
+      assert.strictEqual(cfg, undefined);
+    }
   });
 });
 
