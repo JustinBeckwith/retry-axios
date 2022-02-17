@@ -122,7 +122,6 @@ function onFulfilled(res: AxiosResponse) {
  * @returns An array with the pucked values
  */
 function normalizeArray<T>(obj?: T[]): T[] | undefined {
-  const arr: T[] = [];
   if (!obj) {
     return undefined;
   }
@@ -130,13 +129,11 @@ function normalizeArray<T>(obj?: T[]): T[] | undefined {
     return obj;
   }
   if (typeof obj === 'object') {
-    Object.keys(obj).forEach(key => {
-      if (typeof key === 'number') {
-        arr[key] = obj[key];
-      }
-    });
+    return Object.keys(obj)
+      .filter(key => !!obj[key])
+      .map(key => obj[key]);
   }
-  return arr;
+  return [];
 }
 
 /**
