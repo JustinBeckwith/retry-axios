@@ -114,13 +114,13 @@ describe('retry-axios', () => {
     const scopes = [
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [500, 'foo'];
         }),
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [200, 'bar'];
         }),
@@ -154,13 +154,13 @@ describe('retry-axios', () => {
     const scopes = [
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [500, 'foo'];
         }),
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [200, 'bar'];
         }),
@@ -194,13 +194,13 @@ describe('retry-axios', () => {
     const scopes = [
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [500, 'foo'];
         }),
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [200, 'bar'];
         }),
