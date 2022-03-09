@@ -168,4 +168,4 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 [npm-image]: https://img.shields.io/npm/v/retry-axios.svg
 [npm-url]: https://npmjs.org/package/retry-axios
 [snyk-image]: https://snyk.io/test/github/JustinBeckwith/retry-axios/badge.svg
-[snyk-url]: https://snyk.io/test/github/JustinBeckwith/retry-axios
+[snyk-url]: https://snyk.io/test/github/JustinBeckwith/retry-axios 
