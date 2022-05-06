@@ -2,13 +2,11 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "source": "src/index.ts",
-  "main": "dist/index.js",
-  "module": "dist/index.module.js",
-  "unpkg": "dist/index.umd.js",
-  "types": "dist/src/index.d.ts",
+  "exports": "./build/src/index.js",
+  "type": "module",
+  "types": "./build/src/index.d.ts",
   "engines": {
-    "node": ">=10.7.0"
+    "node": ">=14"
   },
   "repository": {
     "type": "git",
@@ -18,11 +16,8 @@
     "lint": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",
-    "compile": "tsc --target ES5 --module CommonJS",
-    "build-web": "microbundle",
-    "umd": "rm -rf umd && babel build/src -d umd --source-maps",
+    "compile": "tsc -p .",
     "test": "c8 mocha build/test",
-    "prepare": "npm run build-web",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
   },
@@ -38,31 +33,26 @@
     "axios": "*"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "@types/mocha": "^9.0.0",
-    "@types/sinon": "^10.0.0",
-    "@types/node": "^16.0.0",
-    "axios": "^0.26.0",
-    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
-    "c8": "^7.0.0",
-    "gts": "^3.0.0",
-    "js-green-licenses": "^3.0.0",
-    "microbundle": "^0.11.0",
-    "mocha": "^9.0.0",
-    "nock": "^13.0.0",
-    "semantic-release": "^18.0.0",
-    "sinon": "^13.0.0",
-    "typescript": "~4.3.0"
+    "@types/mocha": "^9.1.1",
+    "@types/sinon": "^10.0.11",
+    "@types/node": "^17.0.31",
+    "axios": "^0.27.0",
+    "c8": "^7.11.2",
+    "gts": "^3.1.0",
+    "js-green-licenses": "^3.0.1",
+    "mocha": "^10.0.0",
+    "nock": "^13.2.4",
+    "semantic-release": "^19.0.2",
+    "sinon": "^13.0.2",
+    "typescript": "~4.6.4"
   },
   "files": [
-    "dist"
+    "build/src"
   ],
   "c8": {
     "exclude": [
       "build/test",
       "dist"
     ]
-  },
-  "browserslist": "> 1%, last 2 versions, Firefox ESR"
+  }
 }

@@ -1,10 +1,10 @@
-import * as assert from 'assert';
-import axios, {AxiosRequestConfig} from 'axios';
-import * as nock from 'nock';
-import * as sinon from 'sinon';
+import assert from 'assert';
+import axios, {AxiosError, AxiosRequestConfig} from 'axios';
+import nock from 'nock';
+import sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
-import * as rax from '../src';
-import {RaxConfig} from '../src';
+import * as rax from '../src/index.js';
+import {RaxConfig} from '../src/index.js';
 
 const url = 'http://test.local';
 
@@ -25,7 +25,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     try {
       await axios(url);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       scope.done();
       const config = rax.getConfig(e);
       assert.strictEqual(config!.currentRetryAttempt, 3, 'currentRetryAttempt');
@@ -73,7 +74,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     try {
       await axios.post(url);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const config = rax.getConfig(e);
       assert.strictEqual(config!.currentRetryAttempt, 0);
       scope.done();
@@ -101,7 +103,8 @@ describe('retry-axios', () => {
     const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1}};
     try {
       await axios(cfg);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       assert.strictEqual(rax.getConfig(e)!.currentRetryAttempt, 1);
       scope.done();
       return;
@@ -114,13 +117,13 @@ describe('retry-axios', () => {
     const scopes = [
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [500, 'foo'];
         }),
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [200, 'bar'];
         }),
@@ -154,13 +157,13 @@ describe('retry-axios', () => {
     const scopes = [
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [500, 'foo'];
         }),
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [200, 'bar'];
         }),
@@ -194,13 +197,13 @@ describe('retry-axios', () => {
     const scopes = [
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [500, 'foo'];
         }),
       nock(url)
         .get('/')
-        .reply((_, __) => {
+        .reply(() => {
           requesttimes.push(process.hrtime.bigint());
           return [200, 'bar'];
         }),
@@ -246,7 +249,8 @@ describe('retry-axios', () => {
     assert.notStrictEqual(ax, axios);
     try {
       await axios({url});
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       assert.strictEqual(undefined, rax.getConfig(e));
       scope.done();
       return;
@@ -278,7 +282,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     try {
       await axios.get(url);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.currentRetryAttempt, 0);
       scope.done();
@@ -293,7 +298,8 @@ describe('retry-axios', () => {
     try {
       const cfg: rax.RaxConfig = {url, raxConfig: {retry: 0}};
       await axios(cfg);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(0, cfg!.currentRetryAttempt);
       scope.done();
@@ -311,7 +317,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.backoffType, 'exponential');
       scope.isDone();
@@ -381,7 +388,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.currentRetryAttempt, 0);
       scope.done();
@@ -418,7 +426,8 @@ describe('retry-axios', () => {
     const config = {url, raxConfig: {noResponseRetries: 0}};
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.currentRetryAttempt, 0);
       scope.isDone();
@@ -477,7 +486,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.retryDelay, 0);
       scope.isDone();
@@ -495,7 +505,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.retry, 0);
       scope.isDone();
@@ -513,7 +524,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.noResponseRetries, 0);
       scope.isDone();
