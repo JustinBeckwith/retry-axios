@@ -1,10 +1,10 @@
-import * as assert from 'assert';
-import axios, {AxiosRequestConfig} from 'axios';
-import * as nock from 'nock';
-import * as sinon from 'sinon';
+import assert from 'assert';
+import axios, {AxiosError, AxiosRequestConfig} from 'axios';
+import nock from 'nock';
+import sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
-import * as rax from '../src';
-import {RaxConfig} from '../src';
+import * as rax from '../src/index.js';
+import {RaxConfig} from '../src/index.js';
 
 const url = 'http://test.local';
 
@@ -25,7 +25,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     try {
       await axios(url);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       scope.done();
       const config = rax.getConfig(e);
       assert.strictEqual(config!.currentRetryAttempt, 3, 'currentRetryAttempt');
@@ -73,7 +74,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     try {
       await axios.post(url);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const config = rax.getConfig(e);
       assert.strictEqual(config!.currentRetryAttempt, 0);
       scope.done();
@@ -101,12 +103,133 @@ describe('retry-axios', () => {
     const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1}};
     try {
       await axios(cfg);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       assert.strictEqual(rax.getConfig(e)!.currentRetryAttempt, 1);
       scope.done();
       return;
     }
     assert.fail('Expected to throw');
+  });
+
+  it('should have non-zero delay between first and second attempt, static backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply(() => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply(() => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'static',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between attempts using the
+    // static backoff strategy is 100 ms. Test with tolerance.
+    assert.strict(
+      0.16 > delayInSeconds && delayInSeconds > 0.1,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
+  });
+
+  it('should have non-zero delay between first and second attempt, linear backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply(() => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply(() => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'linear',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between the first two attempts using the
+    // linear backoff strategy is 1000 ms. Test with tolerance.
+    assert.strict(
+      1.1 > delayInSeconds && delayInSeconds > 1.0,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
+  });
+
+  it('should have non-zero delay between first and second attempt, exp backoff', async () => {
+    const requesttimes: bigint[] = [];
+    const scopes = [
+      nock(url)
+        .get('/')
+        .reply(() => {
+          requesttimes.push(process.hrtime.bigint());
+          return [500, 'foo'];
+        }),
+      nock(url)
+        .get('/')
+        .reply(() => {
+          requesttimes.push(process.hrtime.bigint());
+          return [200, 'bar'];
+        }),
+    ];
+
+    interceptorId = rax.attach();
+    const res = await axios({
+      url,
+      raxConfig: {
+        backoffType: 'exponential',
+      },
+    });
+
+    // Confirm that first retry did yield 200 OK with expected body
+    assert.strictEqual(res.data, 'bar');
+    scopes.forEach(s => s.done());
+
+    assert.strictEqual(requesttimes.length, 2);
+    const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+    // The default delay between attempts using the
+    // exp backoff strategy is 500 ms. Test with tolerance.
+    assert.strict(
+      0.55 > delayInSeconds && delayInSeconds > 0.5,
+      `unexpected delay: ${delayInSeconds.toFixed(3)} s`
+    );
   });
 
   it('should accept a new axios instance', async () => {
@@ -126,7 +249,8 @@ describe('retry-axios', () => {
     assert.notStrictEqual(ax, axios);
     try {
       await axios({url});
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       assert.strictEqual(undefined, rax.getConfig(e));
       scope.done();
       return;
@@ -158,7 +282,8 @@ describe('retry-axios', () => {
     interceptorId = rax.attach();
     try {
       await axios.get(url);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.currentRetryAttempt, 0);
       scope.done();
@@ -173,7 +298,8 @@ describe('retry-axios', () => {
     try {
       const cfg: rax.RaxConfig = {url, raxConfig: {retry: 0}};
       await axios(cfg);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(0, cfg!.currentRetryAttempt);
       scope.done();
@@ -191,7 +317,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.backoffType, 'exponential');
       scope.isDone();
@@ -261,7 +388,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.currentRetryAttempt, 0);
       scope.done();
@@ -298,7 +426,8 @@ describe('retry-axios', () => {
     const config = {url, raxConfig: {noResponseRetries: 0}};
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.currentRetryAttempt, 0);
       scope.isDone();
@@ -357,7 +486,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.retryDelay, 0);
       scope.isDone();
@@ -375,7 +505,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.retry, 0);
       scope.isDone();
@@ -393,7 +524,8 @@ describe('retry-axios', () => {
     };
     try {
       await axios(config);
-    } catch (e) {
+    } catch (ex) {
+      const e = ex as AxiosError;
       const cfg = rax.getConfig(e);
       assert.strictEqual(cfg!.noResponseRetries, 0);
       scope.isDone();
@@ -467,6 +599,33 @@ describe('retry-axios', () => {
     const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
     await assert.rejects(axios(cfg));
     assert.strictEqual(scopes[1].isDone(), false);
+  });
+
+  it('should use maxRetryDelay', async function () {
+    this.timeout(1000); // Short timeout to trip test if delay longer than expected
+    const scopes = [
+      nock(url).get('/').reply(429, undefined),
+      nock(url).get('/').reply(200, 'toast'),
+    ];
+    interceptorId = rax.attach();
+    const {promise, resolve} = invertedPromise();
+    const clock = sinon.useFakeTimers({
+      shouldAdvanceTime: true, // Otherwise interferes with nock
+    });
+    const axiosPromise = axios({
+      url,
+      raxConfig: {
+        onRetryAttempt: resolve,
+        retryDelay: 10000, // Higher default to ensure maxRetryDelay is used
+        maxRetryDelay: 5000,
+        backoffType: 'exponential',
+      },
+    });
+    await promise;
+    clock.tick(5000); // Advance clock by expected retry delay
+    const res = await axiosPromise;
+    assert.strictEqual(res.data, 'toast');
+    scopes.forEach(s => s.done());
   });
 });
 

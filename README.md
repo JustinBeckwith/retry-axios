@@ -4,7 +4,6 @@
 
 [![NPM Version][npm-image]][npm-url]
 [![GitHub Actions][github-image]][github-url]
-[![Dependency Status][david-image]][david-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
 [![codecov][codecov-image]][codecov-url]
 [![style badge][gts-image]][gts-url]
@@ -61,6 +60,7 @@ const res = await axios({
     retry: 3,
 
     // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
+    // 'noResponseRetries' is limited by the 'retry' value.
     noResponseRetries: 2,
 
     // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static'
@@ -163,13 +163,9 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 [github-url]: https://github.com/JustinBeckwith/retry-axios/actions/
 [codecov-image]: https://codecov.io/gh/JustinBeckwith/retry-axios/branch/main/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/JustinBeckwith/retry-axios
-[david-image]: https://david-dm.org/JustinBeckwith/retry-axios.svg
-[david-url]: https://david-dm.org/JustinBeckwith/retry-axios
 [gts-image]: https://img.shields.io/badge/code%20style-Google%20%E2%98%82%EF%B8%8F-blue.svg
 [gts-url]: https://www.npmjs.com/package/gts
 [npm-image]: https://img.shields.io/npm/v/retry-axios.svg
 [npm-url]: https://npmjs.org/package/retry-axios
 [snyk-image]: https://snyk.io/test/github/JustinBeckwith/retry-axios/badge.svg
 [snyk-url]: https://snyk.io/test/github/JustinBeckwith/retry-axios
-
-![David](https://img.shields.io/david/JustinBeckwith/retry-axios)
