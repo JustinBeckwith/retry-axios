@@ -60,6 +60,7 @@ const res = await axios({
     retry: 3,
 
     // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
+    // 'noResponseRetries' is limited by the 'retry' value.
     noResponseRetries: 2,
 
     // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static'
