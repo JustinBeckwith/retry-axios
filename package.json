@@ -2,57 +2,83 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "exports": "./build/src/index.js",
-  "type": "module",
-  "types": "./build/src/index.d.ts",
-  "engines": {
-    "node": ">=14"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/JustinBeckwith/retry-axios.git"
-  },
-  "scripts": {
-    "lint": "gts check",
-    "clean": "gts clean",
-    "fix": "gts fix",
-    "compile": "tsc -p .",
-    "test": "c8 mocha build/test",
-    "pretest": "npm run compile",
-    "license-check": "jsgl --local ."
-  },
   "keywords": [
     "axios",
     "retry"
   ],
-  "author": {
-    "name": "Justin Beckwith"
+  "homepage": "https://github.com/JustinBeckwith/retry-axios#readme",
+  "bugs": {
+    "url": "https://github.com/JustinBeckwith/retry-axios/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JustinBeckwith/retry-axios.git"
   },
   "license": "Apache-2.0",
-  "peerDependencies": {
-    "axios": "*"
+  "author": "Justin Beckwith",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json",
+    "./src/*": "./src/*"
   },
-  "devDependencies": {
-    "@types/mocha": "^10.0.0",
-    "@types/sinon": "^10.0.11",
-    "@types/node": "^17.0.31",
-    "axios": "^0.27.0",
-    "c8": "^7.11.2",
-    "gts": "^3.1.0",
-    "js-green-licenses": "^3.0.1",
-    "mocha": "^10.0.0",
-    "nock": "^13.2.4",
-    "semantic-release": "^19.0.2",
-    "sinon": "^14.0.0",
-    "typescript": "~4.8.0"
+  "main": "dist/index.cjs",
+  "unpkg": "dist/index.umd.production.min.cjs",
+  "module": "dist/index.esm.mjs",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "directories": {
+    "test": "test"
   },
   "files": [
-    "build/src"
+    "dist"
   ],
+  "scripts": {
+    "build": "yarn run build:tsdx && yarn run build:dts:tsc",
+    "build:dts:bundle": "npx @bluelovers/dts-bundle-generator -o ./dist/index.d.ts ./src/index.ts --no-banner --inline-declare-global & echo build:dts:bundle",
+    "build:dts:copy": "copy .\\src\\index.d.ts .\\dist\\index.d.ts & echo build:dts",
+    "build:dts:tsc": "yarn run build:dts:copy && yarn run build:dts:tsc:emit && yarn run build:dts:copy",
+    "build:dts:tsc:emit": "tsc --declaration --noEmit false",
+    "build:tsdx": "npx @bluelovers/tsdx build --target node",
+    "lint": "gts check",
+    "clean": "gts clean",
+    "fix": "gts fix",
+    "compile": "yarn run build",
+    "test": "c8 mocha",
+    "pretest": "npm run compile",
+    "license-check": "jsgl --local ."
+  },
   "c8": {
     "exclude": [
       "build/test",
       "dist"
     ]
+  },
+  "devDependencies": {
+    "@bluelovers/tsconfig": "*",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^18.11.3",
+    "@types/sinon": "^10.0.13",
+    "axios": "^0.27.2",
+    "c8": "^7.12.0",
+    "gts": "^3.1.1",
+    "js-green-licenses": "^3.0.1",
+    "mocha": "^10.1.0",
+    "nock": "^13.2.9",
+    "semantic-release": "^19.0.5",
+    "sinon": "^14.0.1",
+    "typescript": "next"
+  },
+  "peerDependencies": {
+    "axios": "*"
+  },
+  "packageManager": "yarn@1.22.19",
+  "engines": {
+    "node": ">=14"
   }
 }

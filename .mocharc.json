@@ -2,5 +2,8 @@
   "check-leaks": true,
   "timeout": 60000,
   "throw-deprecation": true,
+  "spec": [
+    "test/index.js"
+  ],
   "enable-source-maps": true
 }

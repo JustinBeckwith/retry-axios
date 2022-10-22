@@ -2,9 +2,11 @@ import assert from 'assert';
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import nock from 'nock';
 import sinon from 'sinon';
-import {describe, it, afterEach} from 'mocha';
-import * as rax from '../src/index.js';
-import {RaxConfig} from '../src/index.js';
+//import {describe, it, afterEach} from 'mocha';
+// @ts-ignore
+import * as rax from 'retry-axios';
+// @ts-ignore
+import {RaxConfig} from 'retry-axios';
 
 const url = 'http://test.local';
 
