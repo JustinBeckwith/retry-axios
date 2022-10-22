@@ -1,11 +1,8 @@
 {
-  "extends": "./node_modules/gts/tsconfig-google.json",
+  "extends": "@bluelovers/tsconfig/tsdx/index.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "build",
-    "moduleResolution": "node",
-    "module": "ES2022",
-    "esModuleInterop": true
+    "importHelpers": false,
+    "noImplicitAny": false
   },
   "include": [
     "src/*.ts",
