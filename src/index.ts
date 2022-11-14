@@ -164,6 +164,10 @@ function onError(err: AxiosError) {
     return Promise.reject(err);
   }
 
+  // I have no idea why the TypeScript compiler is insisting on this
+  // but whatever I guess.
+  err = err as AxiosError;
+
   const config = getConfig(err) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry = typeof config.retry === 'number' ? config.retry : 3;
@@ -279,7 +283,7 @@ function onError(err: AxiosError) {
   return Promise.resolve()
     .then(() => onBackoffPromise)
     .then(() => onRetryAttemptPromise)
-    .then(() => config.instance!.request(err.config));
+    .then(() => config.instance!.request(err.config!));
 }
 
 /**
@@ -304,8 +308,8 @@ export function shouldRetryRequest(err: AxiosError) {
 
   // Only retry with configured HttpMethods.
   if (
-    !err.config.method ||
-    config.httpMethodsToRetry!.indexOf(err.config.method.toUpperCase()) < 0
+    !err.config!.method ||
+    config.httpMethodsToRetry!.indexOf(err.config!.method.toUpperCase()) < 0
   ) {
     return false;
   }

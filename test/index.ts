@@ -20,7 +20,7 @@ describe('retry-axios', () => {
     }
   });
 
-  it('should provide an expected set of defaults', async () => {
+  it.only('should provide an expected set of defaults', async () => {
     const scope = nock(url).get('/').thrice().reply(500);
     interceptorId = rax.attach();
     try {
