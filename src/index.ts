@@ -159,12 +159,12 @@ function parseRetryAfter(header: string): number | undefined {
   return undefined;
 }
 
-function onError(err: AxiosError) {
-  if (axios.isCancel(err)) {
-    return Promise.reject(err);
+function onError(e: AxiosError) {
+  if (axios.isCancel(e)) {
+    return Promise.reject(e);
   }
 
-  const config = getConfig(err) || {};
+  const config = getConfig(e) || {};
   config.currentRetryAttempt = config.currentRetryAttempt || 0;
   config.retry = typeof config.retry === 'number' ? config.retry : 3;
   config.retryDelay =
@@ -203,6 +203,7 @@ function onError(err: AxiosError) {
     normalizeArray(config.statusCodesToRetry) || retryRanges;
 
   // Put the config back into the err
+  const err = e as AxiosError;
   err.config = err.config || {}; // allow for wider range of errors
   (err.config as RaxConfig).raxConfig = {...config};
 
@@ -279,7 +280,7 @@ function onError(err: AxiosError) {
   return Promise.resolve()
     .then(() => onBackoffPromise)
     .then(() => onRetryAttemptPromise)
-    .then(() => config.instance!.request(err.config));
+    .then(() => config.instance!.request(err.config!));
 }
 
 /**
@@ -304,7 +305,7 @@ export function shouldRetryRequest(err: AxiosError) {
 
   // Only retry with configured HttpMethods.
   if (
-    !err.config.method ||
+    !err.config?.method ||
     config.httpMethodsToRetry!.indexOf(err.config.method.toUpperCase()) < 0
   ) {
     return false;
