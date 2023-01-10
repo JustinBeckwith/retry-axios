@@ -39,7 +39,7 @@
     "axios": "^1.2.1",
     "c8": "^7.11.2",
     "gts": "^3.1.0",
-    "js-green-licenses": "^3.0.1",
+    "js-green-licenses": "^4.0.0",
     "mocha": "^10.0.0",
     "nock": "^13.2.4",
     "semantic-release": "^20.0.0",
