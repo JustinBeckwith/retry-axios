@@ -204,7 +204,8 @@ function onError(e: AxiosError) {
 
   // Put the config back into the err
   const err = e as AxiosError;
-  err.config = err.config || {}; // allow for wider range of errors
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (err as any).config = err.config || {}; // allow for wider range of errors
   (err.config as RaxConfig).raxConfig = {...config};
 
   // Determine if we should retry the request
