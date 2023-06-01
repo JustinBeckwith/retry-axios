@@ -44,7 +44,7 @@
     "nock": "^13.3.0",
     "semantic-release": "^21.0.0",
     "sinon": "^15.0.2",
-    "typescript": "~5.0.2"
+    "typescript": "~5.1.0"
   },
   "files": [
     "build/src"
