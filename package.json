@@ -2,9 +2,23 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "exports": "./build/src/index.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/src/index.d.ts",
+        "default": "./build/src/index.js"
+      },
+      "require": {
+        "types": "./build/cjs/src/index.d.ts",
+        "default": "./build/cjs/src/index.js"
+      },
+      "default": "./build/cjs/src/index.js"
+    }
+  },
   "types": "./build/src/index.d.ts",
+  "main": "./build/cjs/src/index.js",
+  "module": "./build/src/index.js",
   "engines": {
     "node": ">=14"
   },
@@ -16,8 +30,8 @@
     "lint": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",
-    "compile": "tsc -p .",
-    "test": "c8 mocha build/test",
+    "compile": "tsc -p . && tsc -p tsconfig.cjs.json && tsconfig-to-dual-package",
+    "test": "c8 mocha build/test && c8 mocha build/cjs/test",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
   },
@@ -44,10 +58,14 @@
     "nock": "^13.3.0",
     "semantic-release": "^21.0.0",
     "sinon": "^15.0.2",
+    "tsconfig-to-dual-package": "^1.2.0",
     "typescript": "~5.1.0"
   },
   "files": [
-    "build/src"
+    "build/src",
+    "build/src/package.json",
+    "build/cjs/src",
+    "build/cjs/src/package.json"
   ],
   "c8": {
     "exclude": [
