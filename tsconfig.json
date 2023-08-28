@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "strict": true,
+    "sourceMap": true,
     "target": "ES2022",
     "rootDir": ".",
     "outDir": "build",
