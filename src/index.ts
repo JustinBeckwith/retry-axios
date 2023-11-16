@@ -27,6 +27,7 @@ export interface RetryConfig {
 
 	/**
 	 * The instance of the axios object to which the interceptor is attached.
+	 * @deprecated No longer needed.
 	 */
 	instance?: AxiosInstance;
 
@@ -179,7 +180,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	config.retry = typeof config.retry === 'number' ? config.retry : 3;
 	config.retryDelay =
 		typeof config.retryDelay === 'number' ? config.retryDelay : 100;
-	config.instance = config.instance || instance;
+	instance = config.instance || instance;
 	config.backoffType = config.backoffType || 'exponential';
 	config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
 		'GET',
@@ -296,7 +297,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	return Promise.resolve()
 		.then(async () => onBackoffPromise)
 		.then(async () => onRetryAttemptPromise)
-		.then(async () => config.instance!.request(axiosError.config!));
+		.then(async () => instance.request(axiosError.config!));
 }
 
 /**

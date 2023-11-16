@@ -34,7 +34,6 @@ describe('retry-axios', () => {
 			assert.strictEqual(config!.retry, 3, 'retry');
 			assert.strictEqual(config!.noResponseRetries, 2, 'noResponseRetries');
 			assert.strictEqual(config!.retryDelay, 100, 'retryDelay');
-			assert.strictEqual(config!.instance, axios, 'axios');
 			assert.strictEqual(config!.backoffType, 'exponential', 'backoffType');
 			assert.strictEqual(config!.checkRetryAfter, true);
 			assert.strictEqual(config!.maxRetryAfter, 60_000 * 5);
