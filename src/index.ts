@@ -90,7 +90,10 @@ export type RaxConfig = {
  */
 export function attach(instance?: AxiosInstance) {
 	instance = instance || axios;
-	return instance.interceptors.response.use(onFulfilled, onError);
+	return instance.interceptors.response.use(
+		onFulfilled,
+		async (error: AxiosError) => onError(instance!, error),
+	);
 }
 
 /**
@@ -165,7 +168,7 @@ function parseRetryAfter(header: string): number | undefined {
 	return undefined;
 }
 
-async function onError(error: AxiosError) {
+async function onError(instance: AxiosInstance, error: AxiosError) {
 	if (isCancel(error)) {
 		throw error;
 	}
@@ -175,7 +178,7 @@ async function onError(error: AxiosError) {
 	config.retry = typeof config.retry === 'number' ? config.retry : 3;
 	config.retryDelay =
 		typeof config.retryDelay === 'number' ? config.retryDelay : 100;
-	config.instance = config.instance || axios;
+	config.instance = config.instance || instance;
 	config.backoffType = config.backoffType || 'exponential';
 	config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
 		'GET',

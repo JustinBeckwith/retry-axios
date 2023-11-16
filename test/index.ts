@@ -111,6 +111,22 @@ describe('retry-axios', () => {
 		}
 	});
 
+	it('should retry at least the configured number of times for custom client', async function () {
+		this.timeout(10_000);
+		const scopes = [
+			nock(url).get('/').times(3).reply(500),
+			nock(url).get('/').reply(200, 'milk'),
+		];
+		const client = axios.create();
+		interceptorId = rax.attach(client);
+		const cfg: rax.RaxConfig = {url, raxConfig: {retry: 4}};
+		const result = await client(cfg);
+		assert.strictEqual(result.data, 'milk');
+		for (const s of scopes) {
+			s.done();
+		}
+	});
+
 	it('should not retry more than configured', async () => {
 		const scope = nock(url).get('/').twice().reply(500);
 		interceptorId = rax.attach();
