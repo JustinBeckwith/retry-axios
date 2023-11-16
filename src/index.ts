@@ -137,8 +137,9 @@ function normalizeArray<T>(object?: T[]): T[] | undefined {
 
 	if (typeof object === 'object') {
 		for (const key of Object.keys(object)) {
-			if (typeof key === 'number') {
-				array[key] = object[key];
+			const number_ = Number.parseInt(key, 10);
+			if (!Number.isNaN(number_)) {
+				array[number_] = object[key];
 			}
 		}
 	}

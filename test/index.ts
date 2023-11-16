@@ -80,6 +80,23 @@ describe('retry-axios', () => {
 		}
 	});
 
+	it('should support methods passed as an object', async () => {
+		const scopes = [
+			nock(url).post('/').reply(500),
+			nock(url).post('/').reply(200, 'toast'),
+		];
+		interceptorId = rax.attach();
+		const result = await axios.post(
+			url,
+			{},
+			{raxConfig: {httpMethodsToRetry: {...['POST']}}},
+		);
+		assert.strictEqual(result.data, 'toast');
+		for (const s of scopes) {
+			s.done();
+		}
+	});
+
 	it('should not retry on a post', async () => {
 		const scope = nock(url).post('/').reply(500);
 		interceptorId = rax.attach();
