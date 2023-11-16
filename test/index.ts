@@ -652,6 +652,17 @@ describe('retry-axios', () => {
 		assert.strictEqual(scopes[1].isDone(), false);
 	});
 
+	it('should not retry if Retry-After is invalid', async () => {
+		const scopes = [
+			nock(url).get('/').reply(429, undefined, {'Retry-After': 'foo'}),
+			nock(url).get('/').reply(200, 'toast'),
+		];
+		interceptorId = rax.attach();
+		const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
+		await assert.rejects(axios(cfg));
+		assert.strictEqual(scopes[1].isDone(), false);
+	});
+
 	it('should use maxRetryDelay', async function () {
 		this.timeout(1000); // Short timeout to trip test if delay longer than expected
 		const scopes = [
