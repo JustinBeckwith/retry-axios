@@ -2,9 +2,15 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "exports": "./build/src/index.js",
-  "type": "module",
-  "types": "./build/src/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./build/cjs/index.js",
+      "import": "./build/esm/index.js"
+    }
+  },
+  "main": "build/cjs/index.js",
+  "module": "build/esm/index.js",
+  "types": "build/types/index.d.ts",
   "engines": {
     "node": ">=18"
   },
@@ -15,8 +21,8 @@
   "scripts": {
     "lint": "xo --prettier",
     "fix": "xo --prettier --fix",
-    "compile": "tsc -p .",
-    "test": "c8 mocha build/test",
+    "compile": "tsc -b ./tsconfig-cjs.json ./tsconfig-esm.json ./tsconfig-types.json && sh ./add-module-package-json.sh",
+    "test": "c8 mocha --require ts-node/register test/**/*.ts",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
   },
@@ -42,18 +48,13 @@
     "nock": "^13.3.0",
     "semantic-release": "^22.0.0",
     "sinon": "^17.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "~5.3.0",
     "xo": "^0.56.0"
   },
   "files": [
-    "build/src"
+    "build/*"
   ],
-  "c8": {
-    "exclude": [
-      "build/test",
-      "dist"
-    ]
-  },
   "xo": {
     "rules": {
       "@typescript-eslint/prefer-nullish-coalescing": "off",

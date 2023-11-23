@@ -4,8 +4,7 @@ import axios, {type AxiosError, type AxiosRequestConfig} from 'axios';
 import nock from 'nock';
 import * as sinon from 'sinon';
 import {describe, it, afterEach} from 'mocha';
-import * as rax from '../src/index.js';
-import {type RaxConfig} from '../src/index.js';
+import * as rax from '../src';
 
 const url = 'http://test.local';
 
@@ -293,7 +292,7 @@ describe('retry-axios', () => {
 		];
 		const ax = axios.create();
 		interceptorId = rax.attach(ax);
-		const cfg: RaxConfig = {raxConfig: {instance: ax}};
+		const cfg: rax.RaxConfig = {raxConfig: {instance: ax}};
 		const result = await ax.get(url, cfg);
 		assert.strictEqual(result.data, 'raisins');
 		for (const s of scopes) {
@@ -396,7 +395,7 @@ describe('retry-axios', () => {
 		];
 		interceptorId = rax.attach();
 		let flipped = false;
-		const config: RaxConfig = {
+		const config: rax.RaxConfig = {
 			url,
 			raxConfig: {
 				onRetryAttempt(error) {
@@ -420,7 +419,7 @@ describe('retry-axios', () => {
 		];
 		interceptorId = rax.attach();
 		let flipped = false;
-		const config: RaxConfig = {
+		const config: rax.RaxConfig = {
 			url,
 			raxConfig: {
 				async onRetryAttempt(error) {
@@ -443,7 +442,7 @@ describe('retry-axios', () => {
 	it('should support overriding the shouldRetry method', async () => {
 		const scope = nock(url).get('/').reply(500);
 		interceptorId = rax.attach();
-		const config: RaxConfig = {
+		const config: rax.RaxConfig = {
 			url,
 			raxConfig: {
 				shouldRetry(error) {
