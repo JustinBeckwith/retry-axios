@@ -43,9 +43,14 @@ export interface RetryConfig {
 	statusCodesToRetry?: number[][];
 
 	/**
+	 * Function to invoke when error occurred.
+	 */
+	onError?: (error: AxiosError) => void | Promise<void>;
+
+	/**
 	 * Function to invoke when a retry attempt is made.
 	 */
-	onRetryAttempt?: (error: AxiosError) => void;
+	onRetryAttempt?: (error: AxiosError) => void | Promise<void>;
 
 	/**
 	 * Function to invoke which determines if you should retry
@@ -285,17 +290,14 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		setTimeout(resolve, delay);
 	});
 
-	// Notify the user if they added an `onRetryAttempt` handler
-	if (config.onRetryAttempt) {
-		config.onRetryAttempt(axiosError);
+	if (config.onError) {
+		await config.onError(axiosError);
 	}
-
-	const onRetryAttemptPromise = Promise.resolve();
 
 	// Return the promise in which recalls axios to retry the request
 	return Promise.resolve()
 		.then(async () => onBackoffPromise)
-		.then(async () => onRetryAttemptPromise)
+		.then(async () => config.onRetryAttempt?.(axiosError))
 		.then(async () => config.instance!.request(axiosError.config!));
 }
 
