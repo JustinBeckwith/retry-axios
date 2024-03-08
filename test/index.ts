@@ -324,8 +324,8 @@ describe('retry-axios', () => {
 		ax.defaults.raxConfig = {
 			retry: 3,
 			instance: ax,
-			onRetryAttempt(evt) {
-				console.log(`attempt #${evt.config!.raxConfig?.currentRetryAttempt}`);
+			onRetryAttempt(event) {
+				console.log(`attempt #${event.config!.raxConfig?.currentRetryAttempt}`);
 			},
 		};
 		interceptorId = rax.attach(ax);
@@ -534,15 +534,15 @@ describe('retry-axios', () => {
 		interceptorId = rax.attach();
 		try {
 			// eslint-disable-next-line import/no-named-as-default-member
-			const src = axios.CancelToken.source();
+			const source = axios.CancelToken.source();
 			const cfg: rax.RaxConfig = {
 				url,
 				raxConfig: {retry: 2},
-				cancelToken: src.token,
+				cancelToken: source.token,
 			};
 			const request = axios(cfg);
 			setTimeout(() => {
-				src.cancel();
+				source.cancel();
 			}, 10);
 			await request;
 			throw new Error('The canceled request completed.');
