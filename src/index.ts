@@ -89,7 +89,7 @@ export type RaxConfig = {
  * @returns The id of the interceptor attached to the axios instance.
  */
 export function attach(instance?: AxiosInstance) {
-	instance = instance || axios;
+	instance ||= axios;
 	return instance.interceptors.response.use(
 		onFulfilled,
 		async (error: AxiosError) => onError(instance!, error),
@@ -102,7 +102,7 @@ export function attach(instance?: AxiosInstance) {
  * @param instance The axios instance using this interceptor.
  */
 export function detach(interceptorId: number, instance?: AxiosInstance) {
-	instance = instance || axios;
+	instance ||= axios;
 	instance.interceptors.response.eject(interceptorId);
 }
 
@@ -175,12 +175,12 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	}
 
 	const config = getConfig(error) || {};
-	config.currentRetryAttempt = config.currentRetryAttempt || 0;
+	config.currentRetryAttempt ||= 0;
 	config.retry = typeof config.retry === 'number' ? config.retry : 3;
 	config.retryDelay =
 		typeof config.retryDelay === 'number' ? config.retryDelay : 100;
-	config.instance = config.instance || instance;
-	config.backoffType = config.backoffType || 'exponential';
+	config.instance ||= instance;
+	config.backoffType ||= 'exponential';
 	config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
 		'GET',
 		'HEAD',
@@ -221,8 +221,8 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	(axiosError.config as RaxConfig).raxConfig = {...config};
 
 	// Determine if we should retry the request
-	const shouldRetryFn = config.shouldRetry || shouldRetryRequest;
-	if (!shouldRetryFn(axiosError)) {
+	const shouldRetryFunction = config.shouldRetry || shouldRetryRequest;
+	if (!shouldRetryFunction(axiosError)) {
 		throw axiosError;
 	}
 
@@ -345,7 +345,7 @@ export function shouldRetryRequest(error: AxiosError) {
 	}
 
 	// If we are out of retry attempts, return
-	config.currentRetryAttempt = config.currentRetryAttempt || 0;
+	config.currentRetryAttempt ||= 0;
 	if (config.currentRetryAttempt >= config.retry!) {
 		return false;
 	}
