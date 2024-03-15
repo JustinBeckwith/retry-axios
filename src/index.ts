@@ -92,7 +92,7 @@ export function attach(instance?: AxiosInstance) {
 	instance ||= axios;
 	return instance.interceptors.response.use(
 		onFulfilled,
-		async (error: AxiosError) => onError(instance!, error),
+		async (error: AxiosError) => onError(instance, error),
 	);
 }
 
