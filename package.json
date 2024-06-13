@@ -2,8 +2,9 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "exports": "./build/src/index.js",
-  "type": "module",
+  "type": "commonjs",
+  "source": "src/index.ts",
+  "main": "./build/src/index.js",
   "types": "./build/src/index.d.ts",
   "engines": {
     "node": ">=18"
