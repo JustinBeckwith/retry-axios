@@ -230,7 +230,10 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	const onBackoffPromise = new Promise((resolve, reject) => {
 		let delay = 0;
 		// If enabled, check for 'Retry-After' header in response to use as delay
-		if (config.checkRetryAfter && axiosError.response?.headers['retry-after']) {
+		if (
+			config.checkRetryAfter &&
+			axiosError.response?.headers?.['retry-after']
+		) {
 			const retryAfter = parseRetryAfter(
 				axiosError.response.headers['retry-after'] as string,
 			);
