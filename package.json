@@ -13,8 +13,8 @@
     "url": "https://github.com/JustinBeckwith/retry-axios.git"
   },
   "scripts": {
-    "lint": "xo --prettier",
-    "fix": "xo --prettier --fix",
+    "fix": "biome check --write .",
+    "lint": "biome check .",
     "compile": "tsc -p .",
     "test": "c8 mocha build/test",
     "pretest": "npm run compile",
@@ -32,6 +32,7 @@
     "axios": "*"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.0.0",
     "@types/sinon": "^17.0.0",
@@ -42,8 +43,7 @@
     "nock": "^13.3.0",
     "semantic-release": "^24.0.0",
     "sinon": "^18.0.0",
-    "typescript": "~5.5.0",
-    "xo": "^0.58.0"
+    "typescript": "~5.5.0"
   },
   "files": [
     "build/src"
@@ -53,11 +53,5 @@
       "build/test",
       "dist"
     ]
-  },
-  "xo": {
-    "rules": {
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
-      "@typescript-eslint/consistent-type-definitions": "off"
-    }
   }
 }

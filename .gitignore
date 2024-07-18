@@ -6,4 +6,3 @@ coverage/
 .vscode/
 .rts2*
 dist/
-package-lock.json
