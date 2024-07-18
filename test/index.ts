@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import process from 'node:process';
-import axios, {type AxiosError, type AxiosRequestConfig} from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
+import { afterEach, describe, it } from 'mocha';
 import nock from 'nock';
 import * as sinon from 'sinon';
-import {describe, it, afterEach} from 'mocha';
 import * as rax from '../src/index.js';
-import {type RaxConfig} from '../src/index.js';
+import type { RaxConfig } from '../src/index.js';
 
 const url = 'http://test.local';
 
@@ -30,14 +30,15 @@ describe('retry-axios', () => {
 			const axiosError = error as AxiosError;
 			scope.done();
 			const config = rax.getConfig(axiosError);
-			assert.strictEqual(config!.currentRetryAttempt, 3, 'currentRetryAttempt');
-			assert.strictEqual(config!.retry, 3, 'retry');
-			assert.strictEqual(config!.noResponseRetries, 2, 'noResponseRetries');
-			assert.strictEqual(config!.retryDelay, 100, 'retryDelay');
-			assert.strictEqual(config!.instance, axios, 'axios');
-			assert.strictEqual(config!.backoffType, 'exponential', 'backoffType');
-			assert.strictEqual(config!.checkRetryAfter, true);
-			assert.strictEqual(config!.maxRetryAfter, 60_000 * 5);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 3, 'currentRetryAttempt');
+			assert.strictEqual(config.retry, 3, 'retry');
+			assert.strictEqual(config.noResponseRetries, 2, 'noResponseRetries');
+			assert.strictEqual(config.retryDelay, 100, 'retryDelay');
+			assert.strictEqual(config.instance, axios, 'axios');
+			assert.strictEqual(config.backoffType, 'exponential', 'backoffType');
+			assert.strictEqual(config.checkRetryAfter, true);
+			assert.strictEqual(config.maxRetryAfter, 60_000 * 5);
 			const expectedMethods = new Set([
 				'GET',
 				'HEAD',
@@ -45,7 +46,8 @@ describe('retry-axios', () => {
 				'OPTIONS',
 				'DELETE',
 			]);
-			for (const method of config!.httpMethodsToRetry!) {
+			assert.ok(config.httpMethodsToRetry);
+			for (const method of config.httpMethodsToRetry) {
 				assert(expectedMethods.has(method), 'exected method: $method');
 			}
 
@@ -54,7 +56,8 @@ describe('retry-axios', () => {
 				[429, 429],
 				[500, 599],
 			];
-			const statusCodesToRetry = config!.statusCodesToRetry!;
+			const statusCodesToRetry = config.statusCodesToRetry;
+			assert.ok(statusCodesToRetry);
 			for (const [i, [min, max]] of statusCodesToRetry.entries()) {
 				const [expMin, expMax] = expectedStatusCodes[i];
 				assert.strictEqual(min, expMin, 'status code min');
@@ -73,7 +76,7 @@ describe('retry-axios', () => {
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const result = await axios({url});
+		const result = await axios({ url });
 		assert.strictEqual(result.data, 'toast');
 		for (const s of scopes) {
 			s.done();
@@ -89,7 +92,7 @@ describe('retry-axios', () => {
 		const result = await axios.post(
 			url,
 			{},
-			{raxConfig: {httpMethodsToRetry: {...['POST']}}},
+			{ raxConfig: { httpMethodsToRetry: { ...['POST'] } } },
 		);
 		assert.strictEqual(result.data, 'toast');
 		for (const s of scopes) {
@@ -105,7 +108,8 @@ describe('retry-axios', () => {
 		} catch (error) {
 			const axiosError = error as AxiosError;
 			const config = rax.getConfig(axiosError);
-			assert.strictEqual(config!.currentRetryAttempt, 0);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 0);
 			scope.done();
 			return;
 		}
@@ -120,7 +124,7 @@ describe('retry-axios', () => {
 			nock(url).get('/').reply(200, 'milk'),
 		];
 		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = {url, raxConfig: {retry: 4}};
+		const cfg: rax.RaxConfig = { url, raxConfig: { retry: 4 } };
 		const result = await axios(cfg);
 		assert.strictEqual(result.data, 'milk');
 		for (const s of scopes) {
@@ -136,7 +140,7 @@ describe('retry-axios', () => {
 		];
 		const client = axios.create();
 		interceptorId = rax.attach(client);
-		const cfg: rax.RaxConfig = {url, raxConfig: {retry: 4}};
+		const cfg: rax.RaxConfig = { url, raxConfig: { retry: 4 } };
 		const result = await client(cfg);
 		assert.strictEqual(result.data, 'milk');
 		for (const s of scopes) {
@@ -147,12 +151,14 @@ describe('retry-axios', () => {
 	it('should not retry more than configured', async () => {
 		const scope = nock(url).get('/').twice().reply(500);
 		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = {url, raxConfig: {retry: 1}};
+		const cfg: rax.RaxConfig = { url, raxConfig: { retry: 1 } };
 		try {
 			await axios(cfg);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			assert.strictEqual(rax.getConfig(axiosError)!.currentRetryAttempt, 1);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 1);
 			scope.done();
 			return;
 		}
@@ -293,7 +299,7 @@ describe('retry-axios', () => {
 		];
 		const ax = axios.create();
 		interceptorId = rax.attach(ax);
-		const cfg: RaxConfig = {raxConfig: {instance: ax}};
+		const cfg: RaxConfig = { raxConfig: { instance: ax } };
 		const result = await ax.get(url, cfg);
 		assert.strictEqual(result.data, 'raisins');
 		for (const s of scopes) {
@@ -304,7 +310,7 @@ describe('retry-axios', () => {
 		const scope = nock(url).get('/').reply(500);
 		assert.notStrictEqual(ax, axios);
 		try {
-			await axios({url});
+			await axios({ url });
 		} catch (error) {
 			const axiosError = error as AxiosError;
 			assert.strictEqual(undefined, rax.getConfig(axiosError));
@@ -325,7 +331,9 @@ describe('retry-axios', () => {
 			retry: 3,
 			instance: ax,
 			onRetryAttempt(event) {
-				console.log(`attempt #${event.config!.raxConfig?.currentRetryAttempt}`);
+				const config = event.config;
+				assert.ok(config);
+				console.log(`attempt #${config.raxConfig?.currentRetryAttempt}`);
 			},
 		};
 		interceptorId = rax.attach(ax);
@@ -343,8 +351,9 @@ describe('retry-axios', () => {
 			await axios.get(url);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.currentRetryAttempt, 0);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 0);
 			scope.done();
 			return;
 		}
@@ -356,12 +365,13 @@ describe('retry-axios', () => {
 		const scope = nock(url).get('/').reply(500);
 		interceptorId = rax.attach();
 		try {
-			const cfg: rax.RaxConfig = {url, raxConfig: {retry: 0}};
+			const cfg: rax.RaxConfig = { url, raxConfig: { retry: 0 } };
 			await axios(cfg);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(0, cfg!.currentRetryAttempt);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(0, config.currentRetryAttempt);
 			scope.done();
 			return;
 		}
@@ -370,18 +380,19 @@ describe('retry-axios', () => {
 	});
 
 	it('should allow configuring backoffType', async () => {
-		const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
-			raxConfig: {backoffType: 'exponential'},
+			raxConfig: { backoffType: 'exponential' },
 		};
 		try {
 			await axios(config);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.backoffType, 'exponential');
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.backoffType, 'exponential');
 			scope.isDone();
 			return;
 		}
@@ -400,8 +411,9 @@ describe('retry-axios', () => {
 			url,
 			raxConfig: {
 				onRetryAttempt(error) {
-					const cfg = rax.getConfig(error);
-					assert.strictEqual(cfg!.currentRetryAttempt, 1);
+					const config = rax.getConfig(error);
+					assert.ok(config);
+					assert.strictEqual(config.currentRetryAttempt, 1);
 					flipped = true;
 				},
 			},
@@ -425,8 +437,9 @@ describe('retry-axios', () => {
 			raxConfig: {
 				async onRetryAttempt(error) {
 					return new Promise((resolve) => {
-						const cfg = rax.getConfig(error);
-						assert.strictEqual(cfg!.currentRetryAttempt, 1);
+						const config = rax.getConfig(error);
+						assert.ok(config);
+						assert.strictEqual(config.currentRetryAttempt, 1);
 						flipped = true;
 						resolve(undefined);
 					});
@@ -456,8 +469,9 @@ describe('retry-axios', () => {
 			await axios(config);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.currentRetryAttempt, 0);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 0);
 			scope.done();
 			return;
 		}
@@ -467,7 +481,7 @@ describe('retry-axios', () => {
 
 	it('should retry on ENOTFOUND', async () => {
 		const scopes = [
-			nock(url).get('/').replyWithError({code: 'ENOTFOUND'}),
+			nock(url).get('/').replyWithError({ code: 'ENOTFOUND' }),
 			nock(url).get('/').reply(200, 'oatmeal'),
 		];
 		interceptorId = rax.attach();
@@ -480,7 +494,7 @@ describe('retry-axios', () => {
 
 	it('should retry on ETIMEDOUT', async () => {
 		const scopes = [
-			nock(url).get('/').replyWithError({code: 'ETIMEDOUT'}),
+			nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' }),
 			nock(url).get('/').reply(200, 'bacon'),
 		];
 		interceptorId = rax.attach();
@@ -492,15 +506,16 @@ describe('retry-axios', () => {
 	});
 
 	it('should allow configuring noResponseRetries', async () => {
-		const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
 		interceptorId = rax.attach();
-		const config = {url, raxConfig: {noResponseRetries: 0}};
+		const config = { url, raxConfig: { noResponseRetries: 0 } };
 		try {
 			await axios(config);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.currentRetryAttempt, 0);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 0);
 			scope.isDone();
 			return;
 		}
@@ -516,7 +531,7 @@ describe('retry-axios', () => {
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = {url, raxConfig: {retry: 2}};
+		const cfg: rax.RaxConfig = { url, raxConfig: { retry: 2 } };
 		const result = await axios(cfg);
 		assert.strictEqual(result.data, 'milk');
 		const result2 = await axios(cfg);
@@ -537,7 +552,7 @@ describe('retry-axios', () => {
 			const source = axios.CancelToken.source();
 			const cfg: rax.RaxConfig = {
 				url,
-				raxConfig: {retry: 2},
+				raxConfig: { retry: 2 },
 				cancelToken: source.token,
 			};
 			const request = axios(cfg);
@@ -555,18 +570,19 @@ describe('retry-axios', () => {
 	});
 
 	it('should accept 0 for config.retryDelay', async () => {
-		const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
-			raxConfig: {retryDelay: 0},
+			raxConfig: { retryDelay: 0 },
 		};
 		try {
 			await axios(config);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.retryDelay, 0);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.retryDelay, 0);
 			scope.isDone();
 			return;
 		}
@@ -575,18 +591,19 @@ describe('retry-axios', () => {
 	});
 
 	it('should accept 0 for config.retry', async () => {
-		const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
-			raxConfig: {retry: 0},
+			raxConfig: { retry: 0 },
 		};
 		try {
 			await axios(config);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.retry, 0);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.retry, 0);
 			scope.isDone();
 			return;
 		}
@@ -595,18 +612,19 @@ describe('retry-axios', () => {
 	});
 
 	it('should accept 0 for config.noResponseRetries', async () => {
-		const scope = nock(url).get('/').replyWithError({code: 'ETIMEDOUT'});
+		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
-			raxConfig: {noResponseRetries: 0},
+			raxConfig: { noResponseRetries: 0 },
 		};
 		try {
 			await axios(config);
 		} catch (error) {
 			const axiosError = error as AxiosError;
-			const cfg = rax.getConfig(axiosError);
-			assert.strictEqual(cfg!.noResponseRetries, 0);
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.noResponseRetries, 0);
 			scope.isDone();
 			return;
 		}
@@ -623,7 +641,7 @@ describe('retry-axios', () => {
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const {promise, resolve} = invertedPromise();
+		const { promise, resolve } = invertedPromise();
 		const clock = sinon.useFakeTimers({
 			shouldAdvanceTime: true, // Otherwise interferes with nock
 		});
@@ -653,7 +671,7 @@ describe('retry-axios', () => {
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const {promise, resolve} = invertedPromise();
+		const { promise, resolve } = invertedPromise();
 		const clock = sinon.useFakeTimers({
 			shouldAdvanceTime: true,
 		});
@@ -676,22 +694,22 @@ describe('retry-axios', () => {
 
 	it('should not retry if Retry-After greater than maxRetryAfter', async () => {
 		const scopes = [
-			nock(url).get('/').reply(429, undefined, {'Retry-After': '2'}),
+			nock(url).get('/').reply(429, undefined, { 'Retry-After': '2' }),
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
+		const cfg: rax.RaxConfig = { url, raxConfig: { maxRetryAfter: 1000 } };
 		await assert.rejects(axios(cfg));
 		assert.strictEqual(scopes[1].isDone(), false);
 	});
 
 	it('should not retry if Retry-After is invalid', async () => {
 		const scopes = [
-			nock(url).get('/').reply(429, undefined, {'Retry-After': 'foo'}),
+			nock(url).get('/').reply(429, undefined, { 'Retry-After': 'foo' }),
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = {url, raxConfig: {maxRetryAfter: 1000}};
+		const cfg: rax.RaxConfig = { url, raxConfig: { maxRetryAfter: 1000 } };
 		await assert.rejects(axios(cfg));
 		assert.strictEqual(scopes[1].isDone(), false);
 	});
@@ -703,7 +721,7 @@ describe('retry-axios', () => {
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
-		const {promise, resolve} = invertedPromise();
+		const { promise, resolve } = invertedPromise();
 		const clock = sinon.useFakeTimers({
 			shouldAdvanceTime: true, // Otherwise interferes with nock
 		});
@@ -733,5 +751,5 @@ function invertedPromise() {
 		resolve = innerResolve;
 		reject = innerReject;
 	});
-	return {promise, resolve, reject};
+	return { promise, resolve, reject };
 }

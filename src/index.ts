@@ -78,9 +78,25 @@ export interface RetryConfig {
 	maxRetryDelay?: number;
 }
 
+interface InternalRetryConfig extends RetryConfig {}
+
 export type RaxConfig = {
 	raxConfig: RetryConfig;
 } & AxiosRequestConfig;
+
+// If this wasn't in the list of status codes where we want to automatically retry, return.
+const retryRanges = [
+	// https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+	// 1xx - Retry (Informational, request still processing)
+	// 2xx - Do not retry (Success)
+	// 3xx - Do not retry (Redirect)
+	// 4xx - Do not retry (Client errors)
+	// 429 - Retry ("Too Many Requests")
+	// 5xx - Retry (Server errors)
+	[100, 199],
+	[429, 429],
+	[500, 599],
+];
 
 /**
  * Attach the interceptor to the Axios instance.
@@ -89,10 +105,10 @@ export type RaxConfig = {
  * @returns The id of the interceptor attached to the axios instance.
  */
 export function attach(instance?: AxiosInstance) {
-	instance ||= axios;
-	return instance.interceptors.response.use(
+	const inst = instance || axios;
+	return inst.interceptors.response.use(
 		onFulfilled,
-		async (error: AxiosError) => onError(instance, error),
+		async (error: AxiosError) => onError(inst, error),
 	);
 }
 
@@ -102,8 +118,8 @@ export function attach(instance?: AxiosInstance) {
  * @param instance The axios instance using this interceptor.
  */
 export function detach(interceptorId: number, instance?: AxiosInstance) {
-	instance ||= axios;
-	instance.interceptors.response.eject(interceptorId);
+	const inst = instance || axios;
+	inst.interceptors.response.eject(interceptorId);
 }
 
 function onFulfilled(result: AxiosResponse) {
@@ -197,28 +213,15 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 			? config.maxRetryAfter
 			: 60_000 * 5;
 
-	// If this wasn't in the list of status codes where we want
-	// to automatically retry, return.
-	const retryRanges = [
-		// https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-		// 1xx - Retry (Informational, request still processing)
-		// 2xx - Do not retry (Success)
-		// 3xx - Do not retry (Redirect)
-		// 4xx - Do not retry (Client errors)
-		// 429 - Retry ("Too Many Requests")
-		// 5xx - Retry (Server errors)
-		[100, 199],
-		[429, 429],
-		[500, 599],
-	];
 	config.statusCodesToRetry =
 		normalizeArray(config.statusCodesToRetry) || retryRanges;
 
 	// Put the config back into the err
 	const axiosError = error as AxiosError;
 
-	(axiosError as any).config = axiosError.config || {}; // Allow for wider range of errors
-	(axiosError.config as RaxConfig).raxConfig = {...config};
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	(axiosError.config as any) = axiosError.config || {}; // Allow for wider range of errors
+	(axiosError.config as RaxConfig).raxConfig = { ...config };
 
 	// Determine if we should retry the request
 	const shouldRetryFunction = config.shouldRetry || shouldRetryRequest;
@@ -234,7 +237,11 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 			const retryAfter = parseRetryAfter(
 				axiosError.response.headers['retry-after'] as string,
 			);
-			if (retryAfter && retryAfter > 0 && retryAfter <= config.maxRetryAfter!) {
+			if (
+				retryAfter &&
+				retryAfter > 0 &&
+				retryAfter <= (config.maxRetryAfter ?? 0)
+			) {
 				delay = retryAfter;
 			} else {
 				reject(axiosError);
@@ -255,9 +262,11 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		// `currentRetryAttempt` by 1. So that it is in fact 1 for the first retry
 		// (as opposed to 0 or 2); an intuitive convention to use for the math
 		// below.
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		(axiosError.config as RaxConfig).raxConfig.currentRetryAttempt! += 1;
 
 		// Store with shorter and more expressive variable name.
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		const retrycount = (axiosError.config as RaxConfig).raxConfig
 			.currentRetryAttempt!;
 
@@ -272,6 +281,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 				// which was a bug -- see #122).
 				delay = retrycount * 1000;
 			} else if (config.backoffType === 'static') {
+				// biome-ignore lint/style/noNonNullAssertion: <explanation>
 				delay = config.retryDelay!;
 			} else {
 				delay = ((2 ** retrycount - 1) / 2) * 1000;
@@ -293,10 +303,13 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	const onRetryAttemptPromise = Promise.resolve();
 
 	// Return the promise in which recalls axios to retry the request
-	return Promise.resolve()
-		.then(async () => onBackoffPromise)
-		.then(async () => onRetryAttemptPromise)
-		.then(async () => config.instance!.request(axiosError.config!));
+	return (
+		Promise.resolve()
+			.then(async () => onBackoffPromise)
+			.then(async () => onRetryAttemptPromise)
+			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			.then(async () => config.instance?.request(axiosError.config!))
+	);
 }
 
 /**
@@ -314,7 +327,7 @@ export function shouldRetryRequest(error: AxiosError) {
 	// Check if this error has no response (ETIMEDOUT, ENOTFOUND, etc)
 	if (
 		!error.response &&
-		(config.currentRetryAttempt || 0) >= config.noResponseRetries!
+		(config.currentRetryAttempt || 0) >= (config.noResponseRetries ?? 0)
 	) {
 		return false;
 	}
@@ -322,7 +335,7 @@ export function shouldRetryRequest(error: AxiosError) {
 	// Only retry with configured HttpMethods.
 	if (
 		!error.config?.method ||
-		!config.httpMethodsToRetry!.includes(error.config.method.toUpperCase())
+		!config.httpMethodsToRetry?.includes(error.config.method.toUpperCase())
 	) {
 		return false;
 	}
@@ -331,8 +344,9 @@ export function shouldRetryRequest(error: AxiosError) {
 	// to automatically retry, return.
 	if (error.response?.status) {
 		let isInRange = false;
+		// biome-ignore lint/style/noNonNullAssertion: <explanation>
 		for (const [min, max] of config.statusCodesToRetry!) {
-			const {status} = error.response;
+			const { status } = error.response;
 			if (status >= min && status <= max) {
 				isInRange = true;
 				break;
@@ -346,7 +360,7 @@ export function shouldRetryRequest(error: AxiosError) {
 
 	// If we are out of retry attempts, return
 	config.currentRetryAttempt ||= 0;
-	if (config.currentRetryAttempt >= config.retry!) {
+	if (config.currentRetryAttempt >= (config.retry ?? 0)) {
 		return false;
 	}
 
