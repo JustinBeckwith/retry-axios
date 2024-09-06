@@ -5,9 +5,6 @@
   "exports": "./build/src/index.js",
   "type": "module",
   "types": "./build/src/index.d.ts",
-  "engines": {
-    "node": ">=16"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/JustinBeckwith/retry-axios.git"
