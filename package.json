@@ -6,7 +6,7 @@
   "type": "module",
   "types": "./build/src/index.d.ts",
   "engines": {
-    "node": ">=18"
+    "node": ">=16"
   },
   "repository": {
     "type": "git",
