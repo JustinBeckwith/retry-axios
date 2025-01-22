@@ -2,7 +2,10 @@
   "name": "retry-axios",
   "version": "0.0.0",
   "description": "Retry HTTP requests with Axios.",
-  "exports": "./build/src/index.js",
+  "exports": {
+    "import": "./build/src/index.js",
+    "require": "./build/src/index.cjs"
+  },
   "type": "module",
   "types": "./build/src/index.d.ts",
   "engines": {
@@ -15,7 +18,7 @@
   "scripts": {
     "fix": "biome check --write .",
     "lint": "biome check .",
-    "compile": "tsc -p .",
+    "compile": "tsc -p . && rollup build/src/index.js --file build/src/index.cjs --format cjs",
     "test": "c8 mocha build/test",
     "pretest": "npm run compile",
     "license-check": "jsgl --local ."
@@ -41,6 +44,7 @@
     "js-green-licenses": "^4.0.0",
     "mocha": "^11.0.0",
     "nock": "^13.3.0",
+    "rollup": "^4.31.0",
     "semantic-release": "^24.0.0",
     "sinon": "^19.0.0",
     "typescript": "~5.7.0"
