@@ -46,8 +46,8 @@
     "nock": "^13.3.0",
     "rollup": "^4.31.0",
     "semantic-release": "^24.0.0",
-    "sinon": "^19.0.0",
-    "typescript": "~5.7.0"
+    "sinon": "^20.0.0",
+    "typescript": "~5.8.0"
   },
   "files": [
     "build/src"
