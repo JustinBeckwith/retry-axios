@@ -1,10 +1,9 @@
 import assert from 'node:assert';
 import process from 'node:process';
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
-import { afterEach, describe, it } from 'mocha';
 import nock from 'nock';
 import pDefer from 'p-defer';
-import * as sinon from 'sinon';
+import { afterEach, describe, it, vitest } from 'vitest';
 import type { RaxConfig } from '../src/index.js';
 import * as rax from '../src/index.js';
 
@@ -15,7 +14,7 @@ nock.disableNetConnect();
 describe('retry-axios', () => {
 	let interceptorId: number | undefined;
 	afterEach(() => {
-		sinon.restore();
+		vitest.useRealTimers();
 		nock.cleanAll();
 		if (interceptorId !== undefined) {
 			rax.detach(interceptorId);
@@ -116,36 +115,42 @@ describe('retry-axios', () => {
 		assert.fail('Expected to throw');
 	});
 
-	it('should retry at least the configured number of times', async function () {
-		this.timeout(10_000);
-		const scopes = [
-			nock(url).get('/').times(3).reply(500),
-			nock(url).get('/').reply(200, 'milk'),
-		];
-		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = { url, raxConfig: { retry: 4 } };
-		const result = await axios(cfg);
-		assert.strictEqual(result.data, 'milk');
-		for (const s of scopes) {
-			s.done();
-		}
-	});
+	it(
+		'should retry at least the configured number of times',
+		{ timeout: 10_000 },
+		async () => {
+			const scopes = [
+				nock(url).get('/').times(3).reply(500),
+				nock(url).get('/').reply(200, 'milk'),
+			];
+			interceptorId = rax.attach();
+			const cfg: rax.RaxConfig = { url, raxConfig: { retry: 4 } };
+			const result = await axios(cfg);
+			assert.strictEqual(result.data, 'milk');
+			for (const s of scopes) {
+				s.done();
+			}
+		},
+	);
 
-	it('should retry at least the configured number of times for custom client', async function () {
-		this.timeout(10_000);
-		const scopes = [
-			nock(url).get('/').times(3).reply(500),
-			nock(url).get('/').reply(200, 'milk'),
-		];
-		const client = axios.create();
-		interceptorId = rax.attach(client);
-		const cfg: rax.RaxConfig = { url, raxConfig: { retry: 4 } };
-		const result = await client(cfg);
-		assert.strictEqual(result.data, 'milk');
-		for (const s of scopes) {
-			s.done();
-		}
-	});
+	it(
+		'should retry at least the configured number of times for custom client',
+		{ timeout: 10_000 },
+		async () => {
+			const scopes = [
+				nock(url).get('/').times(3).reply(500),
+				nock(url).get('/').reply(200, 'milk'),
+			];
+			const client = axios.create();
+			interceptorId = rax.attach(client);
+			const cfg: rax.RaxConfig = { url, raxConfig: { retry: 4 } };
+			const result = await client(cfg);
+			assert.strictEqual(result.data, 'milk');
+			for (const s of scopes) {
+				s.done();
+			}
+		},
+	);
 
 	it('should not retry more than configured', async () => {
 		const scope = nock(url).get('/').twice().reply(500);
@@ -669,65 +674,72 @@ describe('retry-axios', () => {
 		assert.fail('Expected to throw');
 	});
 
-	it('should retry with Retry-After header in seconds', async function () {
-		this.timeout(1000); // Short timeout to trip test if delay longer than expected
-		const scopes = [
-			nock(url).get('/').reply(429, undefined, {
-				'Retry-After': '5',
-			}),
-			nock(url).get('/').reply(200, 'toast'),
-		];
-		interceptorId = rax.attach();
-		const { promise, resolve } = pDefer();
-		const clock = sinon.useFakeTimers({
-			shouldAdvanceTime: true, // Otherwise interferes with nock
-		});
-		const axiosPromise = axios({
-			url,
-			raxConfig: {
-				onError: resolve,
-				retryDelay: 10_000, // Higher default to ensure Retry-After is used
-				backoffType: 'static',
-			},
-		});
-		await promise;
-		clock.tick(5000); // Advance clock by expected retry delay
-		const result = await axiosPromise;
-		assert.strictEqual(result.data, 'toast');
-		for (const s of scopes) {
-			s.done();
-		}
-	});
+	// Short timeout to trip test if delay longer than expected
+	it(
+		'should retry with Retry-After header in seconds',
+		{ timeout: 1000 },
+		async () => {
+			const scopes = [
+				nock(url).get('/').reply(429, undefined, {
+					'Retry-After': '5',
+				}),
+				nock(url).get('/').reply(200, 'toast'),
+			];
+			interceptorId = rax.attach();
+			const { promise, resolve } = pDefer();
+			vitest.useFakeTimers({
+				shouldAdvanceTime: true, // Otherwise interferes with nock
+			});
+			const axiosPromise = axios({
+				url,
+				raxConfig: {
+					onError: resolve,
+					retryDelay: 10_000, // Higher default to ensure Retry-After is used
+					backoffType: 'static',
+				},
+			});
+			await promise;
+			await vitest.advanceTimersByTimeAsync(5000); // Advance clock by expected retry delay
+			const result = await axiosPromise;
+			assert.strictEqual(result.data, 'toast');
+			for (const s of scopes) {
+				s.done();
+			}
+		},
+	);
 
-	it('should retry with Retry-After header in http datetime', async function () {
-		this.timeout(1000);
-		const scopes = [
-			nock(url).get('/').reply(429, undefined, {
-				'Retry-After': 'Thu, 01 Jan 1970 00:00:05 UTC',
-			}),
-			nock(url).get('/').reply(200, 'toast'),
-		];
-		interceptorId = rax.attach();
-		const { promise, resolve } = pDefer();
-		const clock = sinon.useFakeTimers({
-			shouldAdvanceTime: true,
-		});
-		const axiosPromise = axios({
-			url,
-			raxConfig: {
-				onError: resolve,
-				backoffType: 'static',
-				retryDelay: 10_000,
-			},
-		});
-		await promise;
-		clock.tick(5000);
-		const result = await axiosPromise;
-		assert.strictEqual(result.data, 'toast');
-		for (const s of scopes) {
-			s.done();
-		}
-	});
+	it(
+		'should retry with Retry-After header in http datetime',
+		{ timeout: 1000 },
+		async () => {
+			const scopes = [
+				nock(url).get('/').reply(429, undefined, {
+					'Retry-After': 'Thu, 01 Jan 1970 00:00:05 UTC',
+				}),
+				nock(url).get('/').reply(200, 'toast'),
+			];
+			interceptorId = rax.attach();
+			const { promise, resolve } = pDefer();
+			vitest.useFakeTimers({
+				now: new Date('1970-01-01T00:00:00Z').getTime(), // Set the clock to the epoch
+			});
+			const axiosPromise = axios({
+				url,
+				raxConfig: {
+					onError: resolve,
+					backoffType: 'static',
+					retryDelay: 10_000,
+				},
+			});
+			await promise;
+			await vitest.advanceTimersByTimeAsync(5000);
+			const result = await axiosPromise;
+			assert.strictEqual(result.data, 'toast');
+			for (const s of scopes) {
+				s.done();
+			}
+		},
+	);
 
 	it('should not retry if Retry-After greater than maxRetryAfter', async () => {
 		const scopes = [
@@ -751,15 +763,15 @@ describe('retry-axios', () => {
 		assert.strictEqual(scopes[1].isDone(), false);
 	});
 
-	it('should use maxRetryDelay', async function () {
-		this.timeout(1000); // Short timeout to trip test if delay longer than expected
+	// Short timeout to trip test if delay longer than expected
+	it('should use maxRetryDelay', { timeout: 1000 }, async () => {
 		const scopes = [
 			nock(url).get('/').reply(429, undefined),
 			nock(url).get('/').reply(200, 'toast'),
 		];
 		interceptorId = rax.attach();
 		const { promise, resolve } = pDefer();
-		const clock = sinon.useFakeTimers({
+		vitest.useFakeTimers({
 			shouldAdvanceTime: true, // Otherwise interferes with nock
 		});
 		const axiosPromise = axios({
@@ -772,7 +784,7 @@ describe('retry-axios', () => {
 			},
 		});
 		await promise;
-		clock.tick(5000); // Advance clock by expected retry delay
+		await vitest.advanceTimersByTimeAsync(5000); // Advance clock by expected retry delay
 		const result = await axiosPromise;
 		assert.strictEqual(result.data, 'toast');
 		for (const s of scopes) {
@@ -989,7 +1001,7 @@ describe('retry-axios', () => {
 		];
 		interceptorId = rax.attach();
 		const { promise, resolve } = pDefer();
-		const clock = sinon.useFakeTimers({
+		vitest.useFakeTimers({
 			shouldAdvanceTime: true,
 		});
 		const axiosPromise = axios({
@@ -1004,7 +1016,7 @@ describe('retry-axios', () => {
 		});
 		await promise;
 		// Even with full jitter, delay should not exceed maxRetryDelay
-		clock.tick(2000);
+		await vitest.advanceTimersByTimeAsync(2000);
 		const result = await axiosPromise;
 		assert.strictEqual(result.data, 'toast');
 		for (const s of scopes) {
