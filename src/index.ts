@@ -78,8 +78,6 @@ export interface RetryConfig {
 	maxRetryDelay?: number;
 }
 
-interface InternalRetryConfig extends RetryConfig {}
-
 export type RaxConfig = {
 	raxConfig: RetryConfig;
 } & AxiosRequestConfig;
@@ -219,7 +217,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	// Put the config back into the err
 	const axiosError = error as AxiosError;
 
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	// biome-ignore lint/suspicious/noExplicitAny: Allow for wider range of errors
 	(axiosError.config as any) = axiosError.config || {}; // Allow for wider range of errors
 	(axiosError.config as RaxConfig).raxConfig = { ...config };
 
@@ -262,11 +260,11 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		// `currentRetryAttempt` by 1. So that it is in fact 1 for the first retry
 		// (as opposed to 0 or 2); an intuitive convention to use for the math
 		// below.
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: Checked above
 		(axiosError.config as RaxConfig).raxConfig.currentRetryAttempt! += 1;
 
 		// Store with shorter and more expressive variable name.
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: Checked above
 		const retrycount = (axiosError.config as RaxConfig).raxConfig
 			.currentRetryAttempt!;
 
@@ -281,7 +279,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 				// which was a bug -- see #122).
 				delay = retrycount * 1000;
 			} else if (config.backoffType === 'static') {
-				// biome-ignore lint/style/noNonNullAssertion: <explanation>
+				// biome-ignore lint/style/noNonNullAssertion: Checked above
 				delay = config.retryDelay!;
 			} else {
 				delay = ((2 ** retrycount - 1) / 2) * 1000;
@@ -307,7 +305,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		Promise.resolve()
 			.then(async () => onBackoffPromise)
 			.then(async () => onRetryAttemptPromise)
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			// biome-ignore lint/style/noNonNullAssertion: Checked above
 			.then(async () => config.instance?.request(axiosError.config!))
 	);
 }
@@ -344,7 +342,7 @@ export function shouldRetryRequest(error: AxiosError) {
 	// to automatically retry, return.
 	if (error.response?.status) {
 		let isInRange = false;
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: Checked above
 		for (const [min, max] of config.statusCodesToRetry!) {
 			const { status } = error.response;
 			if (status >= min && status <= max) {
