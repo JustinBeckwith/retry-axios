@@ -380,7 +380,11 @@ describe('retry-axios', () => {
 	});
 
 	it('should allow configuring backoffType', async () => {
-		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
+		const scope = nock(url)
+			.get('/')
+			.replyWithError(
+				Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+			);
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
@@ -393,7 +397,7 @@ describe('retry-axios', () => {
 			const config = rax.getConfig(axiosError);
 			assert.ok(config);
 			assert.strictEqual(config.backoffType, 'exponential');
-			scope.isDone();
+			scope.done();
 			return;
 		}
 
@@ -481,7 +485,11 @@ describe('retry-axios', () => {
 
 	it('should retry on ENOTFOUND', async () => {
 		const scopes = [
-			nock(url).get('/').replyWithError({ code: 'ENOTFOUND' }),
+			nock(url)
+				.get('/')
+				.replyWithError(
+					Object.assign(new Error('ENOTFOUND'), { code: 'ENOTFOUND' }),
+				),
 			nock(url).get('/').reply(200, 'oatmeal'),
 		];
 		interceptorId = rax.attach();
@@ -494,7 +502,11 @@ describe('retry-axios', () => {
 
 	it('should retry on ETIMEDOUT', async () => {
 		const scopes = [
-			nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' }),
+			nock(url)
+				.get('/')
+				.replyWithError(
+					Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+				),
 			nock(url).get('/').reply(200, 'bacon'),
 		];
 		interceptorId = rax.attach();
@@ -506,7 +518,11 @@ describe('retry-axios', () => {
 	});
 
 	it('should allow configuring noResponseRetries', async () => {
-		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
+		const scope = nock(url)
+			.get('/')
+			.replyWithError(
+				Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+			);
 		interceptorId = rax.attach();
 		const config = { url, raxConfig: { noResponseRetries: 0 } };
 		try {
@@ -516,7 +532,7 @@ describe('retry-axios', () => {
 			const config = rax.getConfig(axiosError);
 			assert.ok(config);
 			assert.strictEqual(config.currentRetryAttempt, 0);
-			scope.isDone();
+			scope.done();
 			return;
 		}
 
@@ -570,7 +586,11 @@ describe('retry-axios', () => {
 	});
 
 	it('should accept 0 for config.retryDelay', async () => {
-		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
+		const scope = nock(url)
+			.get('/')
+			.replyWithError(
+				Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+			);
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
@@ -583,7 +603,7 @@ describe('retry-axios', () => {
 			const config = rax.getConfig(axiosError);
 			assert.ok(config);
 			assert.strictEqual(config.retryDelay, 0);
-			scope.isDone();
+			scope.done();
 			return;
 		}
 
@@ -591,7 +611,11 @@ describe('retry-axios', () => {
 	});
 
 	it('should accept 0 for config.retry', async () => {
-		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
+		const scope = nock(url)
+			.get('/')
+			.replyWithError(
+				Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+			);
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
@@ -604,7 +628,7 @@ describe('retry-axios', () => {
 			const config = rax.getConfig(axiosError);
 			assert.ok(config);
 			assert.strictEqual(config.retry, 0);
-			scope.isDone();
+			scope.done();
 			return;
 		}
 
@@ -612,7 +636,11 @@ describe('retry-axios', () => {
 	});
 
 	it('should accept 0 for config.noResponseRetries', async () => {
-		const scope = nock(url).get('/').replyWithError({ code: 'ETIMEDOUT' });
+		const scope = nock(url)
+			.get('/')
+			.replyWithError(
+				Object.assign(new Error('ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+			);
 		interceptorId = rax.attach();
 		const config: AxiosRequestConfig = {
 			url,
@@ -625,7 +653,7 @@ describe('retry-axios', () => {
 			const config = rax.getConfig(axiosError);
 			assert.ok(config);
 			assert.strictEqual(config.noResponseRetries, 0);
-			scope.isDone();
+			scope.done();
 			return;
 		}
 
