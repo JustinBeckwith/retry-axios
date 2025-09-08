@@ -132,6 +132,7 @@ const res = await axios({
 ```
 
 If you want to add custom retry logic without duplicating too much of the built-in logic, `rax.shouldRetryRequest` will tell you if a request would normally be retried:
+
 ```js
 const res = await axios({
   url: 'https://test.local',
