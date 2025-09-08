@@ -4,8 +4,8 @@ import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 import { afterEach, describe, it } from 'mocha';
 import nock from 'nock';
 import * as sinon from 'sinon';
-import * as rax from '../src/index.js';
 import type { RaxConfig } from '../src/index.js';
+import * as rax from '../src/index.js';
 
 const url = 'http://test.local';
 
