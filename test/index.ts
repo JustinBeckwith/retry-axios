@@ -330,7 +330,7 @@ describe('retry-axios', () => {
 		ax.defaults.raxConfig = {
 			retry: 3,
 			instance: ax,
-			onRetryAttempt(event) {
+			async onRetryAttempt(event) {
 				const config = event.config;
 				assert.ok(config);
 				console.log(`attempt #${config.raxConfig?.currentRetryAttempt}`);
@@ -414,7 +414,7 @@ describe('retry-axios', () => {
 		const config: RaxConfig = {
 			url,
 			raxConfig: {
-				onRetryAttempt(error) {
+				async onRetryAttempt(error) {
 					const config = rax.getConfig(error);
 					assert.ok(config);
 					assert.strictEqual(config.currentRetryAttempt, 1);
@@ -676,7 +676,9 @@ describe('retry-axios', () => {
 		const axiosPromise = axios({
 			url,
 			raxConfig: {
-				onRetryAttempt: resolve,
+				async onRetryAttempt() {
+					resolve();
+				},
 				retryDelay: 10_000, // Higher default to ensure Retry-After is used
 				backoffType: 'static',
 			},
@@ -706,7 +708,9 @@ describe('retry-axios', () => {
 		const axiosPromise = axios({
 			url,
 			raxConfig: {
-				onRetryAttempt: resolve,
+				async onRetryAttempt() {
+					resolve();
+				},
 				backoffType: 'static',
 				retryDelay: 10_000,
 			},
@@ -756,7 +760,9 @@ describe('retry-axios', () => {
 		const axiosPromise = axios({
 			url,
 			raxConfig: {
-				onRetryAttempt: resolve,
+				async onRetryAttempt() {
+					resolve();
+				},
 				retryDelay: 10_000, // Higher default to ensure maxRetryDelay is used
 				maxRetryDelay: 5000,
 				backoffType: 'exponential',
@@ -768,6 +774,39 @@ describe('retry-axios', () => {
 		assert.strictEqual(result.data, 'toast');
 		for (const s of scopes) {
 			s.done();
+		}
+	});
+
+	it('should handle promise rejection in onRetryAttempt', async () => {
+		const scope = nock(url)
+			.get('/')
+			.replyWithError(
+				Object.assign(new Error('ENOTFOUND'), { code: 'ENOTFOUND' }),
+			);
+		interceptorId = rax.attach();
+		const config: RaxConfig = {
+			url,
+			raxConfig: {
+				onRetryAttempt(error) {
+					return new Promise((resolve, reject) => {
+						// User wants to abort retry for ENOTFOUND errors
+						if ('code' in error && error.code === 'ENOTFOUND') {
+							reject(new Error('Not retrying ENOTFOUND'));
+						} else {
+							resolve();
+						}
+					});
+				},
+			},
+		};
+		try {
+			await axios(config);
+			assert.fail('Expected to throw');
+		} catch (error) {
+			// Should catch the rejection from onRetryAttempt
+			assert.ok(error);
+			assert.strictEqual((error as Error).message, 'Not retrying ENOTFOUND');
+			scope.done();
 		}
 	});
 });
