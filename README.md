@@ -85,7 +85,7 @@ const res = await axios({
 
     // You can detect when a retry is happening, and figure out how many
     // retry attempts have been made
-    onRetryAttempt: err => {
+    onRetryAttempt: async (err) => {
       const cfg = rax.getConfig(err);
       console.log(`Retry attempt #${cfg.currentRetryAttempt}`);
     }
@@ -93,24 +93,18 @@ const res = await axios({
 });
 ```
 
-If the logic in onRetryAttempt requires to be asynchronous, you can return a promise, then retry will be executed only after the promise is resolved:
+The `onRetryAttempt` function is always asynchronous and must return a promise. The retry will wait for the promise to resolve before proceeding. If the promise is rejected, the retry will be aborted:
 
 ```js
 const res = await axios({
   url: 'https://test.local',
   raxConfig: {
-    onRetryAttempt: err => {
-      return new Promise((resolve, reject) => {
-        // call a custom asynchronous function
-        refreshToken(err, function(token, error) {
-          if (!error) {
-            window.localStorage.setItem('token', token);
-            resolve();
-          } else {
-            reject();
-          }
-        });
-      });
+    onRetryAttempt: async (err) => {
+      // call a custom asynchronous function
+      const token = await refreshToken(err);
+      window.localStorage.setItem('token', token);
+      // If refreshToken throws or this promise rejects,
+      // the retry will be aborted
     }
   }
 });
