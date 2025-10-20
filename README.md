@@ -59,8 +59,10 @@ const res = await axios({
     // Retry 3 times before giving up. Applies to all errors (5xx, network errors, timeouts, etc). Defaults to 3.
     retry: 3,
 
-    // Milliseconds to delay between retries. Defaults to 100. Only used when backoffType is 'static'.
-    // Ignored for 'exponential' and 'linear' backoff types.
+    // Milliseconds to delay between retries. Defaults to 100.
+    // - For 'static': Fixed delay between retries
+    // - For 'exponential': Base multiplier for exponential calculation
+    // - For 'linear': Ignored (uses attempt * 1000)
     retryDelay: 100,
 
     // HTTP methods to automatically retry.  Defaults to:
@@ -75,6 +77,11 @@ const res = await axios({
     // You can set the backoff type.
     // options are 'exponential' (default), 'static' or 'linear'
     backoffType: 'exponential',
+
+    // Jitter strategy for exponential backoff. Defaults to 'none'.
+    // Options: 'none', 'full', 'equal'
+    // Helps prevent thundering herd in distributed systems
+    jitter: 'full',
 
     // You can detect when an error occurs, before the backoff delay
     onError: async (err) => {
@@ -97,11 +104,18 @@ The `backoffType` option controls how delays between retry attempts are calculat
 
 #### Exponential Backoff (default)
 
-Uses the formula: `((2^attempt - 1) / 2) * 1000` milliseconds
+Uses the formula: `((2^attempt - 1) / 2) * retryDelay` milliseconds
 
-**The `retryDelay` option is ignored when using exponential backoff.**
+The `retryDelay` parameter (defaults to 100ms) is used as the base multiplier for the exponential calculation.
 
-Example timing for the first 5 retries:
+Example timing with default `retryDelay: 100`:
+- Retry 1: 50ms delay
+- Retry 2: 150ms delay
+- Retry 3: 350ms delay
+- Retry 4: 750ms delay
+- Retry 5: 1,550ms delay
+
+Example timing with `retryDelay: 1000`:
 - Retry 1: 500ms delay
 - Retry 2: 1,500ms delay
 - Retry 3: 3,500ms delay
@@ -111,6 +125,7 @@ Example timing for the first 5 retries:
 ```js
 raxConfig: {
   backoffType: 'exponential',  // This is the default
+  retryDelay: 1000,  // Use 1000ms as the base multiplier
   retry: 5
 }
 ```
@@ -163,6 +178,56 @@ raxConfig: {
   retry: 10
 }
 ```
+
+#### Jitter
+
+Jitter adds randomness to exponential backoff delays to prevent the "thundering herd" problem where many clients retry at the same time. This is especially useful in distributed systems.
+
+Available jitter strategies (only applies to exponential backoff):
+
+**No Jitter (default)**
+```js
+raxConfig: {
+  backoffType: 'exponential',
+  jitter: 'none',  // or omit this option
+  retryDelay: 1000
+}
+// Retry 1: exactly 500ms
+// Retry 2: exactly 1,500ms
+// Retry 3: exactly 3,500ms
+```
+
+**Full Jitter**
+
+Randomizes the delay between 0 and the calculated exponential backoff:
+
+```js
+raxConfig: {
+  backoffType: 'exponential',
+  jitter: 'full',
+  retryDelay: 1000
+}
+// Retry 1: random between 0-500ms
+// Retry 2: random between 0-1,500ms
+// Retry 3: random between 0-3,500ms
+```
+
+**Equal Jitter**
+
+Uses half fixed delay, half random:
+
+```js
+raxConfig: {
+  backoffType: 'exponential',
+  jitter: 'equal',
+  retryDelay: 1000
+}
+// Retry 1: 250ms + random(0-250ms) = 250-500ms
+// Retry 2: 750ms + random(0-750ms) = 750-1,500ms
+// Retry 3: 1,750ms + random(0-1,750ms) = 1,750-3,500ms
+```
+
+**Recommendation:** Use `'full'` jitter for most distributed systems to minimize collision probability while maintaining good retry timing.
 
 ### Callback Timing
 

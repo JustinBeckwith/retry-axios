@@ -21,7 +21,10 @@ export interface RetryConfig {
 	currentRetryAttempt?: number;
 
 	/**
-	 * The amount of time to initially delay the retry.  Defaults to 100.
+	 * The delay in milliseconds used for retry backoff. Defaults to 100.
+	 * - For 'static' backoff: Fixed delay between retries
+	 * - For 'exponential' backoff: Base multiplier for exponential calculation
+	 * - For 'linear' backoff: Ignored (uses attempt * 1000)
 	 */
 	retryDelay?: number;
 
@@ -61,6 +64,17 @@ export interface RetryConfig {
 	 * Backoff Type; 'linear', 'static' or 'exponential'.
 	 */
 	backoffType?: 'linear' | 'static' | 'exponential';
+
+	/**
+	 * Jitter strategy for exponential backoff. Defaults to 'none'.
+	 * - 'none': No jitter (default)
+	 * - 'full': Random delay between 0 and calculated exponential backoff
+	 * - 'equal': Half fixed delay, half random
+	 *
+	 * Jitter helps prevent the "thundering herd" problem where many clients
+	 * retry at the same time. Only applies when backoffType is 'exponential'.
+	 */
+	jitter?: 'none' | 'full' | 'equal';
 
 	/**
 	 * Whether to check for 'Retry-After' header in response and use value as delay. Defaults to true.
@@ -283,7 +297,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 			.currentRetryAttempt!;
 
 		// Calculate delay according to chosen strategy
-		// Default to exponential backoff - formula: ((2^c - 1) / 2) * 1000
+		// Default to exponential backoff - formula: ((2^c - 1) / 2) * retryDelay
 		if (delay === 0) {
 			// Was not set by Retry-After logic
 			if (config.backoffType === 'linear') {
@@ -296,7 +310,21 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 				// biome-ignore lint/style/noNonNullAssertion: Checked above
 				delay = config.retryDelay!;
 			} else {
-				delay = ((2 ** retrycount - 1) / 2) * 1000;
+				// Exponential backoff with retryDelay as base multiplier
+				// biome-ignore lint/style/noNonNullAssertion: Checked above
+				const baseDelay = config.retryDelay!;
+				delay = ((2 ** retrycount - 1) / 2) * baseDelay;
+
+				// Apply jitter if configured
+				const jitter = config.jitter || 'none';
+				if (jitter === 'full') {
+					// Full jitter: random delay between 0 and calculated delay
+					delay = Math.random() * delay;
+				} else if (jitter === 'equal') {
+					// Equal jitter: half fixed, half random
+					delay = delay / 2 + Math.random() * (delay / 2);
+				}
+				// 'none' or any other value: no jitter applied
 			}
 
 			if (typeof config.maxRetryDelay === 'number') {

@@ -282,10 +282,10 @@ describe('retry-axios', () => {
 		assert.strictEqual(requesttimes.length, 2);
 		const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
 
-		// The default delay between attempts using the
-		// exp backoff strategy is 500 ms. Test with tolerance.
+		// The default delay between attempts using the exp backoff strategy with
+		// default retryDelay=100 is: ((2^1 - 1) / 2) * 100 = 50 ms. Test with tolerance.
 		assert.strict(
-			delayInSeconds < 0.55 && delayInSeconds > 0.5,
+			delayInSeconds < 0.1 && delayInSeconds > 0.04,
 			`unexpected delay: ${delayInSeconds.toFixed(3)} s`,
 		);
 	});
@@ -809,6 +809,205 @@ describe('retry-axios', () => {
 			assert.ok(error);
 			assert.strictEqual((error as Error).message, 'Not retrying ENOTFOUND');
 			scope.done();
+		}
+	});
+	it('should use retryDelay as base multiplier for exponential backoff', async () => {
+		const requesttimes: bigint[] = [];
+		const scopes = [
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [500];
+				}),
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [200, 'success'];
+				}),
+		];
+
+		interceptorId = rax.attach();
+		const result = await axios({
+			url,
+			raxConfig: {
+				backoffType: 'exponential',
+				retryDelay: 1000, // Use 1000ms as base instead of default 100ms
+			},
+		});
+
+		assert.strictEqual(result.data, 'success');
+		for (const s of scopes) {
+			s.done();
+		}
+
+		assert.strictEqual(requesttimes.length, 2);
+		const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+		// With retryDelay=1000, first retry delay should be:
+		// ((2^1 - 1) / 2) * 1000 = 0.5 * 1000 = 500ms
+		// Test with tolerance
+		assert.ok(
+			delayInSeconds < 0.55 && delayInSeconds > 0.45,
+			`unexpected delay: ${delayInSeconds.toFixed(3)} s (expected ~0.5s)`,
+		);
+	});
+
+	it('should apply full jitter to exponential backoff', async () => {
+		const requesttimes: bigint[] = [];
+		const scopes = [
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [500];
+				}),
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [200, 'success'];
+				}),
+		];
+
+		interceptorId = rax.attach();
+		const result = await axios({
+			url,
+			raxConfig: {
+				backoffType: 'exponential',
+				jitter: 'full',
+				retryDelay: 1000,
+			},
+		});
+
+		assert.strictEqual(result.data, 'success');
+		for (const s of scopes) {
+			s.done();
+		}
+
+		assert.strictEqual(requesttimes.length, 2);
+		const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+		// With full jitter, delay should be random between 0 and base delay (0.5s)
+		// So it should be less than 0.5s but greater than 0
+		assert.ok(
+			delayInSeconds >= 0 && delayInSeconds < 0.55,
+			`unexpected delay with full jitter: ${delayInSeconds.toFixed(3)} s (expected 0-0.5s)`,
+		);
+	});
+
+	it('should apply equal jitter to exponential backoff', async () => {
+		const requesttimes: bigint[] = [];
+		const scopes = [
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [500];
+				}),
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [200, 'success'];
+				}),
+		];
+
+		interceptorId = rax.attach();
+		const result = await axios({
+			url,
+			raxConfig: {
+				backoffType: 'exponential',
+				jitter: 'equal',
+				retryDelay: 1000,
+			},
+		});
+
+		assert.strictEqual(result.data, 'success');
+		for (const s of scopes) {
+			s.done();
+		}
+
+		assert.strictEqual(requesttimes.length, 2);
+		const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+		// With equal jitter, delay should be between 0.25s (half of 0.5s) and 0.5s
+		assert.ok(
+			delayInSeconds >= 0.25 && delayInSeconds < 0.55,
+			`unexpected delay with equal jitter: ${delayInSeconds.toFixed(3)} s (expected 0.25-0.5s)`,
+		);
+	});
+
+	it('should not apply jitter to static backoff', async () => {
+		const requesttimes: bigint[] = [];
+		const scopes = [
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [500];
+				}),
+			nock(url)
+				.get('/')
+				.reply(() => {
+					requesttimes.push(process.hrtime.bigint());
+					return [200, 'success'];
+				}),
+		];
+
+		interceptorId = rax.attach();
+		const result = await axios({
+			url,
+			raxConfig: {
+				backoffType: 'static',
+				jitter: 'full', // Should be ignored for static backoff
+				retryDelay: 500,
+			},
+		});
+
+		assert.strictEqual(result.data, 'success');
+		for (const s of scopes) {
+			s.done();
+		}
+
+		assert.strictEqual(requesttimes.length, 2);
+		const delayInSeconds = Number(requesttimes[1] - requesttimes[0]) / 10 ** 9;
+
+		// Static backoff should use exactly retryDelay regardless of jitter setting
+		assert.ok(
+			delayInSeconds >= 0.45 && delayInSeconds < 0.55,
+			`unexpected delay: ${delayInSeconds.toFixed(3)} s (expected ~0.5s)`,
+		);
+	});
+
+	it('should respect maxRetryDelay with jitter', async () => {
+		const scopes = [
+			nock(url).get('/').reply(500),
+			nock(url).get('/').reply(200, 'toast'),
+		];
+		interceptorId = rax.attach();
+		const { promise, resolve } = invertedPromise();
+		const clock = sinon.useFakeTimers({
+			shouldAdvanceTime: true,
+		});
+		const axiosPromise = axios({
+			url,
+			raxConfig: {
+				onError: resolve,
+				retryDelay: 10_000,
+				maxRetryDelay: 2000,
+				backoffType: 'exponential',
+				jitter: 'full',
+			},
+		});
+		await promise;
+		// Even with full jitter, delay should not exceed maxRetryDelay
+		clock.tick(2000);
+		const result = await axiosPromise;
+		assert.strictEqual(result.data, 'toast');
+		for (const s of scopes) {
+			s.done();
 		}
 	});
 });
