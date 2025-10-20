@@ -56,12 +56,8 @@ const interceptorId = rax.attach();
 const res = await axios({
   url: 'https://test.local',
   raxConfig: {
-    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
+    // Retry 3 times before giving up. Applies to all errors (5xx, network errors, timeouts, etc). Defaults to 3.
     retry: 3,
-
-    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
-    // 'noResponseRetries' is limited by the 'retry' value.
-    noResponseRetries: 2,
 
     // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static'
     retryDelay: 100,
@@ -126,15 +122,26 @@ const res = await axios({
 });
 ```
 
-Or if you want, you can just decide if it should retry or not:
+## Customizing Retry Logic
+
+You can customize which errors should trigger a retry using the `shouldRetry` function:
 
 ```js
 const res = await axios({
   url: 'https://test.local',
   raxConfig: {
-    // Override the decision making process on if you should retry
+    retry: 3,
+    // Custom logic to decide if a request should be retried
+    // This is called AFTER checking the retry count limit
     shouldRetry: err => {
       const cfg = rax.getConfig(err);
+
+      // Don't retry on 4xx errors except 429
+      if (err.response?.status && err.response.status >= 400 && err.response.status < 500) {
+        return err.response.status === 429;
+      }
+
+      // Retry on network errors and 5xx errors
       return true;
     }
   }
@@ -161,6 +168,16 @@ const res = await axios({
   }
 });
 ```
+
+## What Gets Retried
+
+By default, retry-axios will retry requests that:
+
+1. **Return specific HTTP status codes**: 1xx (informational), 429 (too many requests), and 5xx (server errors)
+2. **Are network errors without a response**: ETIMEDOUT, ENOTFOUND, ECONNABORTED, ECONNRESET, etc.
+3. **Use idempotent HTTP methods**: GET, HEAD, PUT, OPTIONS, DELETE
+
+The `retry` config option controls the maximum number of retry attempts for **all** error types. If you need different behavior for network errors vs response errors, use the `shouldRetry` function to implement custom logic.
 
 ## How it works
 

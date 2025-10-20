@@ -55,14 +55,12 @@ export interface RetryConfig {
 	onRetryAttempt?: (error: AxiosError) => Promise<void>;
 
 	/**
-	 * Function to invoke which determines if you should retry
+	 * Function to invoke which determines if you should retry.
+	 * This is called after checking the retry count limit but before other default checks.
+	 * Return true to retry, false to stop retrying.
+	 * If not provided, uses the default retry logic based on status codes and HTTP methods.
 	 */
 	shouldRetry?: (error: AxiosError) => boolean;
-
-	/**
-	 * When there is no response, the number of retries to attempt. Defaults to 2.
-	 */
-	noResponseRetries?: number;
 
 	/**
 	 * Backoff Type; 'linear', 'static' or 'exponential'.
@@ -209,8 +207,6 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		'OPTIONS',
 		'DELETE',
 	];
-	config.noResponseRetries =
-		typeof config.noResponseRetries === 'number' ? config.noResponseRetries : 2;
 	config.checkRetryAfter =
 		typeof config.checkRetryAfter === 'boolean' ? config.checkRetryAfter : true;
 	config.maxRetryAfter =
@@ -343,11 +339,9 @@ export function shouldRetryRequest(error: AxiosError) {
 		return false;
 	}
 
-	// Check if this error has no response (ETIMEDOUT, ENOTFOUND, etc)
-	if (
-		!error.response &&
-		(config.currentRetryAttempt || 0) >= (config.noResponseRetries ?? 0)
-	) {
+	// Check if we are out of retry attempts first
+	config.currentRetryAttempt ||= 0;
+	if (config.currentRetryAttempt >= (config.retry ?? 0)) {
 		return false;
 	}
 
@@ -359,8 +353,7 @@ export function shouldRetryRequest(error: AxiosError) {
 		return false;
 	}
 
-	// If this wasn't in the list of status codes where we want
-	// to automatically retry, return.
+	// For errors with responses, check status codes
 	if (error.response?.status) {
 		let isInRange = false;
 		// biome-ignore lint/style/noNonNullAssertion: Checked above
@@ -377,11 +370,9 @@ export function shouldRetryRequest(error: AxiosError) {
 		}
 	}
 
-	// If we are out of retry attempts, return
-	config.currentRetryAttempt ||= 0;
-	if (config.currentRetryAttempt >= (config.retry ?? 0)) {
-		return false;
-	}
+	// For errors without responses (network errors, timeouts, etc.)
+	// we allow retry as long as we haven't exceeded the retry limit
+	// This includes: ETIMEDOUT, ENOTFOUND, ECONNABORTED, ECONNRESET, etc.
 
 	return true;
 }
