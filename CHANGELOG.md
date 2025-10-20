@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.0.0](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v3.0.4...retry-axios-v4.0.0) (2025-10-20)
+## [4.0.0](https://github.com/JustinBeckwith/retry-axios/compare/v3.2.1...f4e641f) (2025-10-20)
 
 
 ### ⚠ BREAKING CHANGES

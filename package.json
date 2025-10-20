@@ -62,6 +62,10 @@
     "exclude": [
       "build/test",
       "dist"
+    ],
+    "reporter": [
+      "text",
+      "lcov"
     ]
   }
 }
