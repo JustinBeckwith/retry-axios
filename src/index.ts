@@ -90,6 +90,13 @@ export interface RetryConfig {
 	 * Ceiling for calculated delay (in ms) - delay will not exceed this value.
 	 */
 	maxRetryDelay?: number;
+
+	/**
+	 * Array of all errors encountered during retry attempts.
+	 * Populated automatically when retries are performed.
+	 * The first element is the initial error, subsequent elements are retry errors.
+	 */
+	errors?: AxiosError[];
 }
 
 export type RaxConfig = {
@@ -231,6 +238,14 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	// biome-ignore lint/suspicious/noExplicitAny: Allow for wider range of errors
 	(axiosError.config as any) = axiosError.config || {}; // Allow for wider range of errors
 	(axiosError.config as RaxConfig).raxConfig = { ...config };
+
+	// Initialize errors array on first error, or append to existing array
+	if (!config.errors) {
+		config.errors = [axiosError];
+		(axiosError.config as RaxConfig).raxConfig.errors = config.errors;
+	} else {
+		config.errors.push(axiosError);
+	}
 
 	// Determine if we should retry the request
 	// First check the retry count limit, then apply custom logic if provided
