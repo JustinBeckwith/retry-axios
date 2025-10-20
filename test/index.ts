@@ -1010,6 +1010,99 @@ describe('retry-axios', () => {
 			s.done();
 		}
 	});
+
+	it('should collect all errors in the errors array', async () => {
+		const scopes = [
+			nock(url).post('/').reply(500, 'Internal Server Error'),
+			nock(url).post('/').reply(503, 'Service Unavailable'),
+			nock(url).post('/').reply(502, 'Bad Gateway'),
+			nock(url).post('/').reply(504, 'Gateway Timeout'),
+		];
+
+		interceptorId = rax.attach();
+		try {
+			await axios.post(
+				url,
+				{ data: 'test' },
+				{
+					raxConfig: {
+						httpMethodsToRetry: ['POST'],
+						retry: 3,
+						retryDelay: 1,
+					},
+				},
+			);
+			assert.fail('Expected to throw');
+		} catch (error) {
+			const axiosError = error as AxiosError;
+			const config = rax.getConfig(axiosError);
+
+			// Verify all scopes were called
+			for (const s of scopes) {
+				s.done();
+			}
+
+			// Check that errors array exists and has all 4 errors (initial + 3 retries)
+			assert.ok(config?.errors, 'errors array should exist');
+			assert.strictEqual(
+				config.errors.length,
+				4,
+				'should have 4 errors (initial + 3 retries)',
+			);
+
+			// Verify the status codes are captured in order
+			assert.strictEqual(config.errors[0].response?.status, 500);
+			assert.strictEqual(config.errors[1].response?.status, 503);
+			assert.strictEqual(config.errors[2].response?.status, 502);
+			assert.strictEqual(config.errors[3].response?.status, 504);
+
+			// Verify that the last error is the same as the thrown error
+			assert.strictEqual(
+				config.errors[3].response?.status,
+				axiosError.response?.status,
+			);
+		}
+	});
+
+	it('should collect errors even when using shouldRetry', async () => {
+		const scopes = [
+			nock(url).get('/').reply(500, 'Error 1'),
+			nock(url).get('/').reply(500, 'Error 2'),
+		];
+
+		interceptorId = rax.attach();
+		try {
+			await axios({
+				url,
+				raxConfig: {
+					retry: 3,
+					retryDelay: 1,
+					shouldRetry: (error: AxiosError) => {
+						// Custom logic: only retry once
+						const config = rax.getConfig(error);
+						return (config?.currentRetryAttempt || 0) < 1;
+					},
+				},
+			});
+			assert.fail('Expected to throw');
+		} catch (error) {
+			const axiosError = error as AxiosError;
+			const config = rax.getConfig(axiosError);
+
+			// Verify both scopes were called
+			for (const s of scopes) {
+				s.done();
+			}
+
+			// Should have 2 errors (initial + 1 retry due to shouldRetry limiting)
+			assert.ok(config?.errors, 'errors array should exist');
+			assert.strictEqual(
+				config.errors.length,
+				2,
+				'should have 2 errors (initial + 1 retry)',
+			);
+		}
+	});
 });
 
 function invertedPromise() {

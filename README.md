@@ -304,6 +304,46 @@ const res = await axios({
 });
 ```
 
+## Accessing All Retry Errors
+
+When retries are exhausted and the request finally fails, you can access the complete history of all errors that occurred during the retry attempts. This is particularly useful for debugging and understanding what went wrong, especially for non-idempotent operations like POST requests where the error may change between attempts.
+
+```js
+try {
+  await axios.post('https://test.local/api/endpoint', data, {
+    raxConfig: {
+      httpMethodsToRetry: ['POST'],
+      retry: 3
+    }
+  });
+} catch (err) {
+  const cfg = rax.getConfig(err);
+
+  // Access all errors encountered during retries
+  if (cfg?.errors) {
+    console.log(`Total attempts: ${cfg.errors.length}`);
+    console.log(`First error: ${cfg.errors[0].response?.status}`);
+    console.log(`Last error: ${err.response?.status}`);
+
+    // Log all error details
+    cfg.errors.forEach((error, index) => {
+      console.log(`Attempt ${index + 1}: ${error.response?.status} - ${error.response?.data}`);
+    });
+  }
+}
+```
+
+The `errors` array is automatically populated and contains:
+- **First element**: The initial error that triggered the retry logic
+- **Subsequent elements**: Errors from each retry attempt
+- **Order**: Errors are in chronological order (oldest to newest)
+
+This feature is especially valuable when:
+- Debugging complex failure scenarios where errors change between attempts
+- Implementing custom error handling logic that needs to consider all failures
+- Logging and monitoring to understand the full context of request failures
+- Working with non-idempotent operations where side effects may occur
+
 ## What Gets Retried
 
 By default, retry-axios will retry requests that:
