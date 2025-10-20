@@ -19,6 +19,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       matrix:
         node: [20, 22, 24]
@@ -34,7 +37,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           name: actions ${{ matrix.node }}
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
