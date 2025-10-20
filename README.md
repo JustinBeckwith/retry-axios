@@ -59,7 +59,8 @@ const res = await axios({
     // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
     retry: 3,
 
-    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
+    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, ECONNABORTED, etc).
+    // This includes network errors and axios timeout errors (when using the 'timeout' config option).
     // 'noResponseRetries' is limited by the 'retry' value.
     noResponseRetries: 2,
 
@@ -161,6 +162,29 @@ const res = await axios({
   }
 });
 ```
+
+## Handling Timeouts
+
+When using axios's `timeout` config option, timeout errors will be automatically retried. These errors are treated as "no response" errors and are controlled by the `noResponseRetries` config:
+
+```js
+const myAxiosInstance = axios.create({
+  timeout: 5000  // Set axios timeout
+});
+
+myAxiosInstance.defaults.raxConfig = {
+  instance: myAxiosInstance,
+  retry: 3,              // Max retries for errors with responses (5xx, etc)
+  noResponseRetries: 3,  // Max retries for errors without responses (timeouts, network errors, etc)
+};
+
+rax.attach(myAxiosInstance);
+
+// This will retry up to 3 times if the request times out
+const res = await myAxiosInstance.get('https://slow-api.example.com');
+```
+
+**Note:** `noResponseRetries` is independent from `retry`, but both are limited by whichever value is lower. If you want to retry timeouts specifically, make sure `noResponseRetries` is set appropriately.
 
 ## How it works
 
