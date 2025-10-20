@@ -1,0 +1,17 @@
+{
+  "name": "retry-axios-jest-example",
+  "version": "1.0.0",
+  "description": "Example Jest tests for retry-axios",
+  "type": "commonjs",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "retry-axios": "file:../.."
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nock": "^13.5.0"
+  }
+}
