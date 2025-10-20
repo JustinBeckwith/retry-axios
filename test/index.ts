@@ -490,7 +490,7 @@ describe('retry-axios', () => {
 			url,
 			raxConfig: {
 				retry: 2, // Should only retry 2 times
-				shouldRetry(error) {
+				shouldRetry(_error) {
 					retryCount++;
 					// Always return true to retry (simulating user's condition check)
 					return true;

@@ -313,9 +313,11 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		(axiosError.config as RaxConfig).raxConfig.currentRetryAttempt! += 1;
 
 		// Calculate retries remaining
-		// biome-ignore lint/style/noNonNullAssertion: Checked above
 		(axiosError.config as RaxConfig).raxConfig.retriesRemaining =
-			config.retry! - (axiosError.config as RaxConfig).raxConfig.currentRetryAttempt!;
+			// biome-ignore lint/style/noNonNullAssertion: Checked above
+			config.retry! -
+			// biome-ignore lint/style/noNonNullAssertion: Checked above
+			(axiosError.config as RaxConfig).raxConfig.currentRetryAttempt!;
 
 		// Store with shorter and more expressive variable name.
 		// biome-ignore lint/style/noNonNullAssertion: Checked above
