@@ -93,6 +93,12 @@ const res = await axios({
     onRetryAttempt: async (err) => {
       const cfg = rax.getConfig(err);
       console.log(`Retry attempt #${cfg.currentRetryAttempt} is about to start`);
+      console.log(`Retries remaining: ${cfg.retriesRemaining}`);
+
+      // Check if this is the final retry attempt
+      if (cfg.retriesRemaining === 0) {
+        console.log('This is the final retry attempt');
+      }
     }
   }
 });
@@ -255,6 +261,55 @@ const res = await axios({
     }
   }
 });
+```
+
+## Tracking Retry Progress
+
+You can track the current retry state using properties available in the configuration:
+
+- **`currentRetryAttempt`**: The number of retries that have been attempted (starts at 0, increments with each retry)
+- **`retriesRemaining`**: The number of retries left before giving up (calculated as `retry - currentRetryAttempt`)
+
+These properties are particularly useful when you want to show different messages or take different actions based on whether this is the final retry attempt:
+
+```js
+const res = await axios({
+  url: 'https://test.local',
+  raxConfig: {
+    retry: 3,
+    onRetryAttempt: async (err) => {
+      const cfg = rax.getConfig(err);
+
+      console.log(`Retry attempt ${cfg.currentRetryAttempt} of ${cfg.retry}`);
+      console.log(`${cfg.retriesRemaining} retries remaining`);
+
+      // Show user-facing error only on final retry
+      if (cfg.retriesRemaining === 0) {
+        showErrorNotification('Request failed after multiple attempts');
+      }
+    }
+  }
+});
+```
+
+This is especially useful when chaining retry-axios with other error interceptors:
+
+```js
+// Global error handler that shows notifications
+axios.interceptors.response.use(null, async (error) => {
+  const cfg = rax.getConfig(error);
+
+  // Only show error notification on the final retry attempt
+  // Don't spam the user with notifications for intermediate failures
+  if (cfg?.retriesRemaining === 0) {
+    showUserNotification('An error occurred: ' + error.message);
+  }
+
+  return Promise.reject(error);
+});
+
+// Attach retry interceptor
+rax.attach();
 ```
 
 ## Customizing Retry Logic

@@ -21,6 +21,12 @@ export interface RetryConfig {
 	currentRetryAttempt?: number;
 
 	/**
+	 * The number of retries remaining before giving up.
+	 * Calculated as: retry - currentRetryAttempt
+	 */
+	retriesRemaining?: number;
+
+	/**
 	 * The delay in milliseconds used for retry backoff. Defaults to 100.
 	 * - For 'static' backoff: Fixed delay between retries
 	 * - For 'exponential' backoff: Base multiplier for exponential calculation
@@ -305,6 +311,13 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 		// below.
 		// biome-ignore lint/style/noNonNullAssertion: Checked above
 		(axiosError.config as RaxConfig).raxConfig.currentRetryAttempt! += 1;
+
+		// Calculate retries remaining
+		(axiosError.config as RaxConfig).raxConfig.retriesRemaining =
+			// biome-ignore lint/style/noNonNullAssertion: Checked above
+			config.retry! -
+			// biome-ignore lint/style/noNonNullAssertion: Checked above
+			(axiosError.config as RaxConfig).raxConfig.currentRetryAttempt!;
 
 		// Store with shorter and more expressive variable name.
 		// biome-ignore lint/style/noNonNullAssertion: Checked above
