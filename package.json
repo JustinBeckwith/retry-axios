@@ -1,6 +1,6 @@
 {
   "name": "retry-axios",
-  "version": "0.0.0",
+  "version": "4.0.0",
   "description": "Retry HTTP requests with Axios.",
   "exports": {
     ".": {
