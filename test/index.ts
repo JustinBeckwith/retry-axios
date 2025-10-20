@@ -1103,6 +1103,47 @@ describe('retry-axios', () => {
 			);
 		}
 	});
+
+	it('should track retriesRemaining correctly', async () => {
+		const scopes = [
+			nock(url).get('/').reply(500),
+			nock(url).get('/').reply(500),
+			nock(url).get('/').reply(500),
+		];
+		interceptorId = rax.attach();
+		const retriesRemainingValues: number[] = [];
+		const config: RaxConfig = {
+			url,
+			raxConfig: {
+				retry: 3,
+				retryDelay: 1,
+				async onRetryAttempt(error) {
+					const config = rax.getConfig(error);
+					assert.ok(config);
+					assert.ok(
+						config.retriesRemaining !== undefined,
+						'retriesRemaining should be defined',
+					);
+					retriesRemainingValues.push(config.retriesRemaining);
+				},
+			},
+		};
+		try {
+			await axios(config);
+			assert.fail('Expected to throw');
+		} catch (error) {
+			const axiosError = error as AxiosError;
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			assert.strictEqual(config.currentRetryAttempt, 3);
+			assert.strictEqual(config.retriesRemaining, 0);
+			// Verify retriesRemaining decreased correctly: [2, 1, 0]
+			assert.deepStrictEqual(retriesRemainingValues, [2, 1, 0]);
+			for (const s of scopes) {
+				s.done();
+			}
+		}
+	});
 });
 
 function invertedPromise() {
