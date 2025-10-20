@@ -34,7 +34,6 @@ describe('retry-axios', () => {
 			assert.strictEqual(config.currentRetryAttempt, 3, 'currentRetryAttempt');
 			assert.strictEqual(config.retry, 3, 'retry');
 			assert.strictEqual(config.retryDelay, 100, 'retryDelay');
-			assert.strictEqual(config.instance, axios, 'axios');
 			assert.strictEqual(config.backoffType, 'exponential', 'backoffType');
 			assert.strictEqual(config.checkRetryAfter, true);
 			assert.strictEqual(config.maxRetryAfter, 60_000 * 5);
@@ -298,8 +297,7 @@ describe('retry-axios', () => {
 		];
 		const ax = axios.create();
 		interceptorId = rax.attach(ax);
-		const cfg: RaxConfig = { raxConfig: { instance: ax } };
-		const result = await ax.get(url, cfg);
+		const result = await ax.get(url);
 		assert.strictEqual(result.data, 'raisins');
 		for (const s of scopes) {
 			s.done();
@@ -328,7 +326,6 @@ describe('retry-axios', () => {
 		const ax = axios.create();
 		ax.defaults.raxConfig = {
 			retry: 3,
-			instance: ax,
 			async onRetryAttempt(event) {
 				const config = event.config;
 				assert.ok(config);
