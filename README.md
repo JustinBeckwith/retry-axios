@@ -43,7 +43,7 @@ Or you can create your own axios instance to make scoped requests:
 ```js
 const myAxiosInstance = axios.create();
 myAxiosInstance.defaults.raxConfig = {
-  instance: myAxiosInstance
+  retry: 3
 };
 const interceptorId = rax.attach(myAxiosInstance);
 const res = await myAxiosInstance.get('https://test.local');
@@ -70,10 +70,6 @@ const res = await axios({
     // array with a list of ranges.  Defaults to:
     // [[100, 199], [429, 429], [500, 599]]
     statusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
-
-    // If you are using a non static instance of Axios you need
-    // to pass that instance here (const ax = axios.create())
-    instance: ax,
 
     // You can set the backoff type.
     // options are 'exponential' (default), 'static' or 'linear'

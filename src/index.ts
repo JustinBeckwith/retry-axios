@@ -26,11 +26,6 @@ export interface RetryConfig {
 	retryDelay?: number;
 
 	/**
-	 * The instance of the axios object to which the interceptor is attached.
-	 */
-	instance?: AxiosInstance;
-
-	/**
 	 * The HTTP Methods that will be automatically retried.
 	 * Defaults to ['GET','PUT','HEAD','OPTIONS','DELETE']
 	 */
@@ -198,7 +193,6 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	config.retry = typeof config.retry === 'number' ? config.retry : 3;
 	config.retryDelay =
 		typeof config.retryDelay === 'number' ? config.retryDelay : 100;
-	config.instance ||= instance;
 	config.backoffType ||= 'exponential';
 	config.httpMethodsToRetry = normalizeArray(config.httpMethodsToRetry) || [
 		'GET',
@@ -323,7 +317,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 			.then(async () => onBackoffPromise)
 			.then(async () => config.onRetryAttempt?.(axiosError))
 			// biome-ignore lint/style/noNonNullAssertion: Checked above
-			.then(async () => config.instance?.request(axiosError.config!))
+			.then(async () => instance.request(axiosError.config!))
 	);
 }
 
