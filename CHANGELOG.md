@@ -5,13 +5,153 @@
 
 ### ⚠ BREAKING CHANGES
 
-* This library now requires node.js 20 and up.
-* The `config.instance` option has been removed. The axios instance is now automatically used from the interceptor attachment.
-* Removed the `noResponseRetries` configuration option. The `retry` option now controls the maximum number of retries for ALL error types (both response errors and network errors).
-* `onRetryAttempt` now expects an async function
-* This release drops support for node.js 12 and 14. It also drops support for the browser specific compilation, as the entire toolchain was deprecated. I am open to this being re-added if someone wants to take it on :)
-* Drops support for node.js 8.x, which is EOL.
-* This release drops support for node.js 6, which is EOL. Please upgrade with care ❤️
+This major release includes several breaking changes that simplify the API and improve consistency. Please review the migration guide below for each change.
+
+#### 1. Node.js Version Requirements
+
+**This library now requires Node.js 20 or higher.** Previous versions supported Node.js 6, 8, 12, and 14, which are all now end-of-life.
+
+**Migration Required:** Upgrade your Node.js version to 20 or higher before upgrading to retry-axios 4.0.
+
+```bash
+# Check your Node.js version
+node --version
+
+# If below v20, upgrade Node.js first
+# Visit https://nodejs.org or use a version manager like nvm
+```
+
+#### 2. Removal of `config.instance` Option
+
+**The `config.instance` option has been removed.** The axios instance is now automatically used from the interceptor attachment point.
+
+This was confusing because users had to specify the instance twice - once in `raxConfig` and once in `rax.attach()`. Now you only specify it once in `rax.attach()`.
+
+**Before (v3.x):**
+```js
+const myAxiosInstance = axios.create();
+myAxiosInstance.defaults.raxConfig = {
+  instance: myAxiosInstance,  // ❌ Remove this
+  retry: 3
+};
+rax.attach(myAxiosInstance);
+```
+
+**After (v4.0):**
+```js
+const myAxiosInstance = axios.create();
+myAxiosInstance.defaults.raxConfig = {
+  retry: 3  // ✅ Instance is automatically used from rax.attach()
+};
+rax.attach(myAxiosInstance);
+```
+
+**Migration Required:** Remove the `instance` property from your `raxConfig` objects.
+
+#### 3. Simplified Retry Configuration - Removal of `noResponseRetries`
+
+**The `noResponseRetries` configuration option has been removed.** The `retry` option now controls the maximum number of retries for ALL error types (both response errors like 5xx and network errors like timeouts).
+
+This simplifies the API to match industry standards. Popular libraries like axios-retry, Got, and Ky all use a single retry count.
+
+**Before (v3.x):**
+```js
+raxConfig: {
+  retry: 3,              // For 5xx response errors
+  noResponseRetries: 2   // For network/timeout errors
+}
+```
+
+**After (v4.0):**
+```js
+raxConfig: {
+  retry: 3  // For ALL errors (network + response errors)
+}
+```
+
+**If you need different behavior** for network errors vs response errors, use the `shouldRetry` callback:
+
+```js
+raxConfig: {
+  retry: 5,
+  shouldRetry: (err) => {
+    const cfg = rax.getConfig(err);
+
+    // Network error (no response) - allow up to 5 retries
+    if (!err.response) {
+      return cfg.currentRetryAttempt < 5;
+    }
+
+    // Response error (5xx, 429, etc) - limit to 2 retries
+    return cfg.currentRetryAttempt < 2;
+  }
+}
+```
+
+**Migration Required:**
+- If you used `noResponseRetries`, remove it and adjust your `retry` value as needed
+- If you need different retry counts for different error types, implement a `shouldRetry` function
+
+#### 4. `onRetryAttempt` Now Requires Async Functions
+
+**The `onRetryAttempt` callback must now return a Promise.** It will be awaited before the retry attempt proceeds. If the Promise is rejected, the retry will be aborted.
+
+Additionally, the **timing has changed**: `onRetryAttempt` is now called AFTER the backoff delay (right before the retry), not before. A new `onError` callback has been added that fires immediately when an error occurs.
+
+**Before (v3.x):**
+```js
+raxConfig: {
+  onRetryAttempt: (err) => {
+    // Synchronous callback, called before backoff delay
+    console.log('About to retry');
+  }
+}
+```
+
+**After (v4.0):**
+```js
+raxConfig: {
+  // Called immediately when error occurs, before backoff delay
+  onError: async (err) => {
+    console.log('Error occurred, will retry after backoff');
+  },
+
+  // Called after backoff delay, before retry attempt
+  onRetryAttempt: async (err) => {
+    console.log('About to retry now');
+    // Can perform async operations like refreshing tokens
+    const token = await refreshAuthToken();
+    // If this throws, the retry is aborted
+  }
+}
+```
+
+**Common use case - Refreshing authentication tokens:**
+```js
+raxConfig: {
+  retry: 3,
+  onRetryAttempt: async (err) => {
+    // Refresh expired token before retrying
+    if (err.response?.status === 401) {
+      const newToken = await refreshToken();
+      // Update the authorization header for the retry
+      err.config.headers.Authorization = `Bearer ${newToken}`;
+    }
+  }
+}
+```
+
+**Migration Required:**
+- Change `onRetryAttempt` to be an async function or return a Promise
+- If you need immediate error notification (old `onRetryAttempt` timing), use the new `onError` callback instead
+- If your callback throws or rejects, be aware this will now abort the retry
+
+#### Summary of All Breaking Changes
+
+1. **Node.js 20+ required** - Drops support for Node.js 6, 8, 12, and 14
+2. **Remove `config.instance`** - Axios instance is now automatically used from `rax.attach()`
+3. **Remove `noResponseRetries`** - Use `retry` for all error types, or implement `shouldRetry` for custom logic
+4. **`onRetryAttempt` must be async** - Must return a Promise, called after backoff delay (use `onError` for immediate notification)
 
 ### Features
 
