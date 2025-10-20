@@ -83,24 +83,40 @@ const res = await axios({
     // options are 'exponential' (default), 'static' or 'linear'
     backoffType: 'exponential',
 
-    // You can detect when a retry is happening, and figure out how many
-    // retry attempts have been made
+    // You can detect when an error occurs, before the backoff delay
+    onError: async (err) => {
+      const cfg = rax.getConfig(err);
+      console.log(`Error occurred, retry attempt #${cfg.currentRetryAttempt + 1} will happen after backoff`);
+    },
+
+    // You can detect when a retry attempt is about to be made, after the backoff delay
     onRetryAttempt: async (err) => {
       const cfg = rax.getConfig(err);
-      console.log(`Retry attempt #${cfg.currentRetryAttempt}`);
+      console.log(`Retry attempt #${cfg.currentRetryAttempt} is about to start`);
     }
   }
 });
 ```
 
-The `onRetryAttempt` function is always asynchronous and must return a promise. The retry will wait for the promise to resolve before proceeding. If the promise is rejected, the retry will be aborted:
+### Callback Timing
+
+There are two callbacks you can use to hook into the retry lifecycle:
+
+- **`onError`**: Called immediately when an error occurs, before the backoff delay. Use this for logging errors or performing actions that need to happen right away.
+- **`onRetryAttempt`**: Called after the backoff delay, just before the retry request is made. Use this for actions that need to happen right before retrying (like refreshing tokens).
+
+Both functions are asynchronous and must return a promise. The retry will wait for the promise to resolve before proceeding. If the promise is rejected, the retry will be aborted:
 
 ```js
 const res = await axios({
   url: 'https://test.local',
   raxConfig: {
+    onError: async (err) => {
+      // Called immediately when error occurs
+      console.log('An error occurred, will retry after backoff');
+    },
     onRetryAttempt: async (err) => {
-      // call a custom asynchronous function
+      // Called after backoff delay, before retry
       const token = await refreshToken(err);
       window.localStorage.setItem('token', token);
       // If refreshToken throws or this promise rejects,
