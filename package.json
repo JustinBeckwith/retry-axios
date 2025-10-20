@@ -14,7 +14,7 @@
   "module": "./build/src/index.js",
   "types": "./build/src/index.d.ts",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "repository": {
     "type": "git",

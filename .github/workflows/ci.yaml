@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        node: [18, 20, 22]
+        node: [20, 22, 24]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - uses: actions/setup-node@v6
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       - run: npm ci
       - run: npm run lint
   license_check:
@@ -52,6 +52,6 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       - run: npm ci
       - run: npm run license-check
