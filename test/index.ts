@@ -676,9 +676,7 @@ describe('retry-axios', () => {
 		const axiosPromise = axios({
 			url,
 			raxConfig: {
-				async onRetryAttempt() {
-					resolve();
-				},
+				onError: resolve,
 				retryDelay: 10_000, // Higher default to ensure Retry-After is used
 				backoffType: 'static',
 			},
@@ -708,9 +706,7 @@ describe('retry-axios', () => {
 		const axiosPromise = axios({
 			url,
 			raxConfig: {
-				async onRetryAttempt() {
-					resolve();
-				},
+				onError: resolve,
 				backoffType: 'static',
 				retryDelay: 10_000,
 			},
@@ -760,9 +756,7 @@ describe('retry-axios', () => {
 		const axiosPromise = axios({
 			url,
 			raxConfig: {
-				async onRetryAttempt() {
-					resolve();
-				},
+				onError: resolve,
 				retryDelay: 10_000, // Higher default to ensure maxRetryDelay is used
 				maxRetryDelay: 5000,
 				backoffType: 'exponential',
