@@ -179,6 +179,26 @@ By default, retry-axios will retry requests that:
 
 The `retry` config option controls the maximum number of retry attempts for **all** error types. If you need different behavior for network errors vs response errors, use the `shouldRetry` function to implement custom logic.
 
+## Timeout Behavior
+
+When using axios's `timeout` option, the timeout **resets for each retry attempt**:
+
+```js
+axios.post('/api/data', data, {
+  timeout: 10000,  // 10 seconds per attempt
+  raxConfig: {
+    retry: 3  // Up to 3 retries
+  }
+});
+```
+
+In this example:
+- Each request attempt has a 10-second timeout
+- Total execution time could be up to **30 seconds** (10s × 3 attempts) plus retry delays
+- This ensures each retry has a full timeout window to complete
+
+If you need a **global timeout** across all retries, you can implement this using a custom `shouldRetry` function that tracks the elapsed time since the first request.
+
 ## How it works
 
 This library attaches an `interceptor` to an axios instance you pass to the API. This way you get to choose which version of `axios` you want to run, and you can compose many interceptors on the same request pipeline.
