@@ -229,9 +229,23 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	(axiosError.config as RaxConfig).raxConfig = { ...config };
 
 	// Determine if we should retry the request
-	const shouldRetryFunction = config.shouldRetry || shouldRetryRequest;
-	if (!shouldRetryFunction(axiosError)) {
-		throw axiosError;
+	// First check the retry count limit, then apply custom logic if provided
+	if (config.shouldRetry) {
+		// When custom shouldRetry is provided, we still need to check the retry count
+		// to prevent infinite retries (see issue #117)
+		config.currentRetryAttempt ||= 0;
+		if (config.currentRetryAttempt >= (config.retry ?? 0)) {
+			throw axiosError;
+		}
+		// Now apply the custom shouldRetry logic
+		if (!config.shouldRetry(axiosError)) {
+			throw axiosError;
+		}
+	} else {
+		// Use the default shouldRetryRequest logic
+		if (!shouldRetryRequest(axiosError)) {
+			throw axiosError;
+		}
 	}
 
 	// Create a promise that invokes the retry after the backOffDelay

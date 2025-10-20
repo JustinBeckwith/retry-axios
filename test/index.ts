@@ -483,6 +483,43 @@ describe('retry-axios', () => {
 		assert.fail('Expected to throw');
 	});
 
+	it('should respect retry limit when using shouldRetry', async () => {
+		// This test reproduces issue #117
+		// When shouldRetry is provided along with retry count,
+		// the retry count should still be respected
+		const scope = nock(url).get('/').times(3).reply(500);
+		interceptorId = rax.attach();
+		let retryCount = 0;
+		const config: RaxConfig = {
+			url,
+			raxConfig: {
+				retry: 2, // Should only retry 2 times
+				shouldRetry(error) {
+					retryCount++;
+					// Always return true to retry (simulating user's condition check)
+					return true;
+				},
+			},
+		};
+		try {
+			await axios(config);
+		} catch (error) {
+			const axiosError = error as AxiosError;
+			const config = rax.getConfig(axiosError);
+			assert.ok(config);
+			// Should have retried exactly 2 times, not more
+			assert.strictEqual(config.currentRetryAttempt, 2);
+			// shouldRetry should have been called 2 times:
+			// once after initial failure, and once after the first retry failure
+			// (not called after second retry because retry limit was reached)
+			assert.strictEqual(retryCount, 2);
+			scope.done();
+			return;
+		}
+
+		assert.fail('Expected to throw');
+	});
+
 	it('should retry on ENOTFOUND', async () => {
 		const scopes = [
 			nock(url)
