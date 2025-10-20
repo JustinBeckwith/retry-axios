@@ -59,7 +59,8 @@ const res = await axios({
     // Retry 3 times before giving up. Applies to all errors (5xx, network errors, timeouts, etc). Defaults to 3.
     retry: 3,
 
-    // Milliseconds to delay at first.  Defaults to 100. Only considered when backoffType is 'static'
+    // Milliseconds to delay between retries. Defaults to 100. Only used when backoffType is 'static'.
+    // Ignored for 'exponential' and 'linear' backoff types.
     retryDelay: 100,
 
     // HTTP methods to automatically retry.  Defaults to:
@@ -88,6 +89,79 @@ const res = await axios({
     }
   }
 });
+```
+
+### Backoff Types and Timing
+
+The `backoffType` option controls how delays between retry attempts are calculated. There are three strategies available:
+
+#### Exponential Backoff (default)
+
+Uses the formula: `((2^attempt - 1) / 2) * 1000` milliseconds
+
+**The `retryDelay` option is ignored when using exponential backoff.**
+
+Example timing for the first 5 retries:
+- Retry 1: 500ms delay
+- Retry 2: 1,500ms delay
+- Retry 3: 3,500ms delay
+- Retry 4: 7,500ms delay
+- Retry 5: 15,500ms delay
+
+```js
+raxConfig: {
+  backoffType: 'exponential',  // This is the default
+  retry: 5
+}
+```
+
+#### Static Backoff
+
+Uses a fixed delay specified by `retryDelay` (defaults to 100ms if not set).
+
+Example timing with `retryDelay: 3000`:
+- Retry 1: 3,000ms delay
+- Retry 2: 3,000ms delay
+- Retry 3: 3,000ms delay
+
+```js
+raxConfig: {
+  backoffType: 'static',
+  retryDelay: 3000,  // 3 seconds between each retry
+  retry: 3
+}
+```
+
+#### Linear Backoff
+
+Delay increases linearly: `attempt * 1000` milliseconds
+
+**The `retryDelay` option is ignored when using linear backoff.**
+
+Example timing for the first 5 retries:
+- Retry 1: 1,000ms delay
+- Retry 2: 2,000ms delay
+- Retry 3: 3,000ms delay
+- Retry 4: 4,000ms delay
+- Retry 5: 5,000ms delay
+
+```js
+raxConfig: {
+  backoffType: 'linear',
+  retry: 5
+}
+```
+
+#### Maximum Retry Delay
+
+You can cap the maximum delay for any backoff type using `maxRetryDelay`:
+
+```js
+raxConfig: {
+  backoffType: 'exponential',
+  maxRetryDelay: 5000,  // Never wait more than 5 seconds
+  retry: 10
+}
 ```
 
 ### Callback Timing
