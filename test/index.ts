@@ -554,6 +554,28 @@ describe('retry-axios', () => {
 		}
 	});
 
+	it('should retry on ECONNABORTED (timeout)', async () => {
+		// This test addresses issue #133
+		// When axios times out due to the timeout config option,
+		// it throws an ECONNABORTED error which should be retried
+		const scopes = [
+			nock(url)
+				.get('/')
+				.replyWithError(
+					Object.assign(new Error('timeout of 2000ms exceeded'), {
+						code: 'ECONNABORTED',
+					}),
+				),
+			nock(url).get('/').reply(200, 'success'),
+		];
+		interceptorId = rax.attach();
+		const result = await axios.get(url);
+		assert.strictEqual(result.data, 'success');
+		for (const s of scopes) {
+			s.done();
+		}
+	});
+
 	it('should allow configuring noResponseRetries', async () => {
 		const scope = nock(url)
 			.get('/')
