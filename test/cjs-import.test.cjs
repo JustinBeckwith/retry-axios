@@ -1,6 +1,4 @@
-const assert = require('node:assert');
 const axios = require('axios');
-const { describe, it, afterEach } = require('mocha');
 const nock = require('nock');
 
 // Test CommonJS import
