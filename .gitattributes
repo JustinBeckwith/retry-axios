@@ -1,1 +1,2 @@
 *.ts eol=lf
+*.json eol=lf
