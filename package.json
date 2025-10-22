@@ -45,14 +45,14 @@
   "devDependencies": {
     "@biomejs/biome": "^2.2.3",
     "@types/node": "^22.0.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.0.0",
     "axios": "^1.2.1",
     "esbuild": "^0.25.9",
     "js-green-licenses": "^4.0.0",
     "nock": "^14.0.10",
     "p-defer": "^4.0.1",
     "typescript": "~5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.0"
   },
   "files": [
     "build/src"
