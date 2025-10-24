@@ -2,6 +2,8 @@
 
 > Use Axios interceptors to automatically retry failed requests.  Super flexible. Built in exponential backoff.
 
+![retry-axios](https://raw.githubusercontent.com/justinbeckwith/retry-axios/main/site/retry-axios.webp)
+
 [![NPM Version][npm-image]][npm-url]
 [![GitHub Actions][github-image]][github-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
@@ -421,8 +423,6 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 [github-url]: https://github.com/JustinBeckwith/retry-axios/actions/
 [codecov-image]: https://codecov.io/gh/JustinBeckwith/retry-axios/branch/main/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/JustinBeckwith/retry-axios
-[gts-image]: https://img.shields.io/badge/code%20style-Google%20%E2%98%82%EF%B8%8F-blue.svg
-[gts-url]: https://www.npmjs.com/package/gts
 [npm-image]: https://img.shields.io/npm/v/retry-axios.svg
 [npm-url]: https://npmjs.org/package/retry-axios
 [snyk-image]: https://snyk.io/test/github/JustinBeckwith/retry-axios/badge.svg
