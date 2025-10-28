@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.3",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.0.0",
     "axios": "^1.2.1",
     "esbuild": "^0.25.9",
