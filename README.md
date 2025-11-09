@@ -16,6 +16,50 @@
 npm install retry-axios
 ```
 
+## CDN
+
+For front-end applications, you can also use `retry-axios` directly from a CDN without a build step. This is useful for quick prototypes or environments where you can't use npm.
+
+### jsDelivr
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/retry-axios@4.0.0/build/src/index.js"></script>
+<script>
+  // Attach retry-axios to the global axios object
+  rax.attach();
+
+  // Now you can use axios with retry capabilities
+  axios.get('https://httpbin.org/status/503')
+    .then(response => {
+      console.log('Success:', response.data);
+    })
+    .catch(error => {
+      console.error('Error:', error.message);
+    });
+</script>
+```
+
+### unpkg
+
+```html
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/retry-axios@4.0.0/build/src/index.js"></script>
+<script>
+  // Attach retry-axios to the global axios object
+  rax.attach();
+
+  // Now you can use axios with retry capabilities
+  axios.get('https://httpbin.org/status/503')
+    .then(response => {
+      console.log('Success:', response.data);
+    })
+    .catch(error => {
+      console.error('Error:', error.message);
+    });
+</script>
+```
+
 ## Usage
 
 To use this library, import it alongside of `axios`:
