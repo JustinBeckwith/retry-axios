@@ -1157,4 +1157,23 @@ describe('retry-axios', () => {
 			}
 		}
 	});
+	it('should handle errors with no config (with mock adapter)', async () => {
+		const client = axios.create();
+		client.defaults.adapter = async () => {
+			const error: AxiosError = {
+				isAxiosError: true,
+				name: 'Error',
+				message: 'network error',
+				toJSON: () => ({}),
+			};
+			throw error;
+		};
+		interceptorId = rax.attach(client);
+		try {
+			await client.get(url);
+			assert.fail('Expected to throw');
+		} catch (e) {
+			assert.strictEqual((e as Error).message, 'network error');
+		}
+	});
 });
