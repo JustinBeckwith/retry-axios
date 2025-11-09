@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.1](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.0...retry-axios-v4.0.1) (2025-11-09)
+
+
+### Bug Fixes
+
+* Switch Codecov to OIDC tokenless authentication ([#318](https://github.com/JustinBeckwith/retry-axios/issues/318)) ([75e5b6d](https://github.com/JustinBeckwith/retry-axios/commit/75e5b6d77e9c2a0167954e9a37b1373a74f5ad8b))
+
 ## [4.0.0](https://github.com/JustinBeckwith/retry-axios/compare/v3.2.1...f4e641f) (2025-10-20)
 
 
