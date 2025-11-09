@@ -47,7 +47,7 @@
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.0.0",
     "axios": "^1.2.1",
-    "esbuild": "^0.26.0",
+    "esbuild": "^0.27.0",
     "js-green-licenses": "^4.0.0",
     "nock": "^14.0.10",
     "p-defer": "^4.0.1",
