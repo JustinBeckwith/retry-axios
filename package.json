@@ -4,7 +4,10 @@
   "description": "Retry HTTP requests with Axios.",
   "exports": {
     ".": {
-      "types": "./build/src/index.d.ts",
+      "types": {
+        "import": "./build/src/index.d.ts",
+        "require": "./build/src/index.d.cts"
+      },
       "import": "./build/src/index.js",
       "require": "./build/src/index.cjs"
     }
@@ -23,9 +26,10 @@
   "scripts": {
     "fix": "biome check --write .",
     "lint": "biome check .",
-    "compile": "npm run compile:esm && npm run compile:cjs",
+    "compile": "npm run compile:esm && npm run compile:cjs && npm run compile:types:cjs",
     "compile:esm": "tsc -p .",
     "compile:cjs": "esbuild build/src/index.js --bundle --platform=node --format=cjs --external:axios --outfile=build/src/index.cjs",
+    "compile:types:cjs": "cp build/src/index.d.ts build/src/index.d.cts",
     "test": "vitest run --coverage",
     "pretest": "npm run compile",
     "test:watch": "vitest watch",
