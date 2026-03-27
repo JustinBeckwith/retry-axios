@@ -51,7 +51,7 @@
     "js-green-licenses": "^4.0.0",
     "nock": "^14.0.10",
     "p-defer": "^4.0.1",
-    "typescript": "~5.9.3",
+    "typescript": "~6.0.0",
     "vitest": "^4.0.0"
   },
   "files": [
