@@ -6,7 +6,7 @@
     "target": "ES2022",
     "rootDir": ".",
     "outDir": "build",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "module": "ES2022",
     "esModuleInterop": true
   },
