@@ -2,12 +2,16 @@
   "compilerOptions": {
     "strict": true,
     "declaration": true,
+    "declarationMap": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
     "sourceMap": true,
     "target": "ES2022",
     "rootDir": ".",
     "outDir": "build",
-    "moduleResolution": "bundler",
-    "module": "ES2022",
+    "moduleResolution": "nodenext",
+    "module": "node20",
     "esModuleInterop": true
   },
   "include": [
