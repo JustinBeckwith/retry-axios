@@ -1,5 +1,14 @@
 {
-  "extends": ["config:base", ":disableDependencyDashboard"],
+  "extends": [
+    "config:base",
+    ":disableDependencyDashboard",
+    ":enableVulnerabilityAlerts",
+    ":automergePr",
+    ":automergeRequireAllStatusChecks"
+  ],
   "pinVersions": false,
-  "rebaseStalePrs": true
+  "rebaseStalePrs": true,
+  "vulnerabilityAlerts": {
+    "automerge": true
+  }
 }
