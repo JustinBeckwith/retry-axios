@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.2](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.1...retry-axios-v4.0.2) (2026-04-09)
+
+
+### Bug Fixes
+
+* add require-specific declaration export for nodenext cjs consumers ([5014853](https://github.com/JustinBeckwith/retry-axios/commit/5014853f96a9910ccaf97fda71826ff66622871c)), closes [#335](https://github.com/JustinBeckwith/retry-axios/issues/335)
+
 ## [4.0.1](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.0...retry-axios-v4.0.1) (2025-11-09)
 
 
