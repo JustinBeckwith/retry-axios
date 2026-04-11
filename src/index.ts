@@ -188,6 +188,19 @@ function normalizeArray<T>(object?: T[]): T[] | undefined {
 	return array;
 }
 
+function setConfigMetadata(config: RetryConfig, errors: AxiosError[]) {
+	config.errors = errors;
+	Object.defineProperty(config, 'toJSON', {
+		value(this: RetryConfig) {
+			const { errors: _errors, ...serializedConfig } = this;
+			return serializedConfig;
+		},
+		writable: true,
+		configurable: true,
+		enumerable: false,
+	});
+}
+
 /**
  * Parse the Retry-After header.
  * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After
@@ -246,12 +259,11 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 	(axiosError.config as RaxConfig).raxConfig = { ...config };
 
 	// Initialize errors array on first error, or append to existing array
-	if (!config.errors) {
-		config.errors = [axiosError];
-		(axiosError.config as RaxConfig).raxConfig.errors = config.errors;
-	} else {
-		config.errors.push(axiosError);
-	}
+	const errors = config.errors ?? [];
+	errors.push(axiosError);
+
+	setConfigMetadata(config, errors);
+	setConfigMetadata((axiosError.config as RaxConfig).raxConfig, errors);
 
 	// Determine if we should retry the request
 	// First check the retry count limit, then apply custom logic if provided

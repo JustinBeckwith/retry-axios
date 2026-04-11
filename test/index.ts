@@ -1117,6 +1117,36 @@ describe('retry-axios', () => {
 		}
 	});
 
+	it('should allow serializing the final error when errors are tracked', async () => {
+		const scopes = [
+			nock(url).get('/').reply(500, 'Error 1'),
+			nock(url).get('/').reply(500, 'Error 2'),
+		];
+
+		interceptorId = rax.attach();
+		try {
+			await axios({
+				url,
+				raxConfig: {
+					retry: 1,
+					retryDelay: 1,
+				},
+			});
+			assert.fail('Expected to throw');
+		} catch (error) {
+			const axiosError = error as AxiosError;
+			const config = rax.getConfig(axiosError);
+
+			for (const s of scopes) {
+				s.done();
+			}
+
+			assert.ok(config?.errors, 'errors array should exist');
+			assert.strictEqual(config.errors.length, 2);
+			assert.doesNotThrow(() => JSON.stringify(axiosError));
+		}
+	});
+
 	it('should track retriesRemaining correctly', async () => {
 		const scopes = [
 			nock(url).get('/').reply(500),
