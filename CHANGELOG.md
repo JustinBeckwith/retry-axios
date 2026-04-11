@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.3](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.2...retry-axios-v4.0.3) (2026-04-11)
+
+
+### Bug Fixes
+
+* avoid circular error serialization ([#348](https://github.com/JustinBeckwith/retry-axios/issues/348)) ([7e5093d](https://github.com/JustinBeckwith/retry-axios/commit/7e5093d998357ddbb9f062a496ce3d1bdca23fcd))
+
 ## [4.0.2](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.1...retry-axios-v4.0.2) (2026-04-09)
 
 
