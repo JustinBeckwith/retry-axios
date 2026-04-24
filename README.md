@@ -6,7 +6,6 @@
 
 [![NPM Version][npm-image]][npm-url]
 [![GitHub Actions][github-image]][github-url]
-[![Known Vulnerabilities][snyk-image]][snyk-url]
 [![codecov][codecov-image]][codecov-url]
 [![Biome][biome-image]][biome-url]
 
@@ -469,7 +468,5 @@ This library attaches an `interceptor` to an axios instance you pass to the API.
 [codecov-url]: https://codecov.io/gh/JustinBeckwith/retry-axios
 [npm-image]: https://img.shields.io/npm/v/retry-axios.svg
 [npm-url]: https://npmjs.org/package/retry-axios
-[snyk-image]: https://snyk.io/test/github/JustinBeckwith/retry-axios/badge.svg
-[snyk-url]: https://snyk.io/test/github/JustinBeckwith/retry-axios
 [biome-image]: https://img.shields.io/badge/Biome-60a5fa?style=flat&logo=biome&logoColor=fff
 [biome-url]: https://biomejs.dev
