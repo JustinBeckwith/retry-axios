@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: JustinBeckwith/linkinator-action@d4ba6bdc371132521aa19a93bed03ca4551428dc # v2
+      - uses: JustinBeckwith/linkinator-action@7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4 # v2
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
