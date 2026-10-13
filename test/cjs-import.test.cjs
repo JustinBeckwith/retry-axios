@@ -1,5 +1,5 @@
 const axios = require('axios');
-const nock = require('nock');
+const { default: nock } = require('nock');
 
 // Test CommonJS import
 const rax = require('../build/src/index.cjs');
