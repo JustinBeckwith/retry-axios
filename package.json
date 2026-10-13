@@ -54,7 +54,7 @@
     "axios": "^1.2.1",
     "esbuild": "^0.28.0",
     "js-green-licenses": "^4.0.0",
-    "nock": "^14.0.10",
+    "nock": "^15.0.0",
     "p-defer": "^4.0.1",
     "typescript": "~7.0.0",
     "vitest": "^5.0.0"
