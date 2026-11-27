@@ -695,6 +695,7 @@ describe('retry-axios', () => {
 				raxConfig: {
 					onError: resolve,
 					retryDelay: 10_000, // Higher default to ensure Retry-After is used
+					maxRetryAfter: 5000, // The upper bound is inclusive
 					backoffType: 'static',
 				},
 			});
@@ -741,6 +742,39 @@ describe('retry-axios', () => {
 		},
 	);
 
+	it.each([
+		'0',
+		'Thu, 01 Jan 1970 00:00:00 GMT',
+		'Sat, 01 Jan 2000 00:00:00 GMT',
+	])(
+		'should retry immediately with elapsed Retry-After %s',
+		{ timeout: 1000 },
+		async (retryAfter) => {
+			vitest.useFakeTimers({
+				toFake: ['Date'],
+				now: new Date('2000-01-01T00:00:00Z'),
+			});
+			const scope = nock(url)
+				.get('/')
+				.reply(429, undefined, { 'Retry-After': retryAfter })
+				.get('/')
+				.reply(200, 'toast');
+			interceptorId = rax.attach();
+			const result = await axios({
+				url,
+				raxConfig: {
+					retry: 1,
+					maxRetryAfter: 0,
+					backoffType: 'static',
+					retryDelay: 10_000,
+				},
+			});
+			assert.strictEqual(result.data, 'toast');
+			assert.strictEqual(result.config.raxConfig?.currentRetryAttempt, 1);
+			scope.done();
+		},
+	);
+
 	it('should not retry if Retry-After greater than maxRetryAfter', async () => {
 		const scopes = [
 			nock(url).get('/').reply(429, undefined, { 'Retry-After': '2' }),
@@ -752,16 +786,115 @@ describe('retry-axios', () => {
 		assert.strictEqual(scopes[1].isDone(), false);
 	});
 
-	it('should not retry if Retry-After is invalid', async () => {
-		const scopes = [
-			nock(url).get('/').reply(429, undefined, { 'Retry-After': 'foo' }),
-			nock(url).get('/').reply(200, 'toast'),
-		];
+	it.each(['foo', '-1', 'Infinity', '-Infinity'])(
+		'should not retry if Retry-After is invalid: %s',
+		async (retryAfter) => {
+			const scopes = [
+				nock(url).get('/').reply(429, undefined, { 'Retry-After': retryAfter }),
+				nock(url).get('/').reply(200, 'toast'),
+			];
+			interceptorId = rax.attach();
+			const cfg: rax.RaxConfig = {
+				url,
+				raxConfig: { maxRetryAfter: Infinity },
+			};
+			await assert.rejects(axios(cfg));
+			assert.strictEqual(scopes[1].isDone(), false);
+		},
+	);
+
+	it.each(['linear', 'exponential'] as const)(
+		'should bypass %s backoff for Retry-After zero',
+		{ timeout: 500 },
+		async (backoffType) => {
+			const scope = nock(url)
+				.get('/')
+				.reply(503, undefined, { 'Retry-After': '0' })
+				.get('/')
+				.reply(200);
+			interceptorId = rax.attach();
+			const result = await axios({
+				url,
+				raxConfig: { backoffType, retryDelay: 10_000 },
+			});
+			assert.strictEqual(result.status, 200);
+			scope.done();
+		},
+	);
+
+	it.each([
+		{ status: 429, retry: 0 },
+		{ status: 400, retry: 3 },
+	])('should not force a retry with Retry-After zero: %j', async (config) => {
+		const scope = nock(url)
+			.get('/')
+			.reply(config.status, undefined, { 'Retry-After': '0' });
 		interceptorId = rax.attach();
-		const cfg: rax.RaxConfig = { url, raxConfig: { maxRetryAfter: 1000 } };
-		await assert.rejects(axios(cfg));
-		assert.strictEqual(scopes[1].isDone(), false);
+		await assert.rejects(
+			axios({ url, raxConfig: { retry: config.retry } }),
+			(error: AxiosError) => {
+				assert.strictEqual(error.response?.status, config.status);
+				assert.strictEqual(rax.getConfig(error)?.currentRetryAttempt, 0);
+				return true;
+			},
+		);
+		scope.done();
 	});
+
+	it('should enforce the retry limit and run hooks for Retry-After zero', async () => {
+		const scope = nock(url)
+			.get('/')
+			.times(3)
+			.reply(429, undefined, { 'Retry-After': '0' });
+		const calls: string[] = [];
+		interceptorId = rax.attach();
+		await assert.rejects(
+			axios({
+				url,
+				raxConfig: {
+					retry: 2,
+					onError: (error) => {
+						calls.push(`error:${rax.getConfig(error)?.currentRetryAttempt}`);
+					},
+					onRetryAttempt: async (error) => {
+						calls.push(`retry:${rax.getConfig(error)?.currentRetryAttempt}`);
+					},
+				},
+			}),
+			(error: AxiosError) => {
+				assert.strictEqual(error.response?.status, 429);
+				assert.strictEqual(rax.getConfig(error)?.currentRetryAttempt, 2);
+				assert.strictEqual(rax.getConfig(error)?.retriesRemaining, 0);
+				assert.strictEqual(rax.getConfig(error)?.errors?.length, 3);
+				return true;
+			},
+		);
+		assert.deepStrictEqual(calls, ['error:1', 'retry:1', 'error:2', 'retry:2']);
+		scope.done();
+	});
+
+	it.each(['0', 'foo', '999999'])(
+		'should ignore Retry-After %s when checkRetryAfter is disabled',
+		{ timeout: 1000 },
+		async (retryAfter) => {
+			const scope = nock(url)
+				.get('/')
+				.reply(429, undefined, { 'Retry-After': retryAfter })
+				.get('/')
+				.reply(200);
+			interceptorId = rax.attach();
+			const result = await axios({
+				url,
+				raxConfig: {
+					checkRetryAfter: false,
+					backoffType: 'static',
+					retryDelay: 0,
+				},
+			});
+			assert.strictEqual(result.status, 200);
+			scope.done();
+		},
+	);
 
 	// Short timeout to trip test if delay longer than expected
 	it('should use maxRetryDelay', { timeout: 1000 }, async () => {
