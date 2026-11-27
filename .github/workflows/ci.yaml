@@ -16,6 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: JustinBeckwith/linkinator-action@12f7a61a56e5e75d659f0dfd6357e2d852ede281 # v2
+        with:
+          # Release Please links to the upcoming tag before it exists. The main
+          # branch check can also run before the release workflow creates it.
+          linksToSkip: '^https://github\.com/JustinBeckwith/retry-axios/compare/retry-axios-v\d+\.\d+\.\d+\.\.\.retry-axios-v\d+\.\d+\.\d+$'
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
