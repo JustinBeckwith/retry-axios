@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.4](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.3...retry-axios-v4.0.4) (2026-11-27)
+
+
+### Bug Fixes
+
+* retry immediately for elapsed retry-after headers ([#381](https://github.com/JustinBeckwith/retry-axios/issues/381)) ([84054eb](https://github.com/JustinBeckwith/retry-axios/commit/84054ebaaf02f66c020bd35e9e2f1f405b27ec9d))
+
 ## [4.0.3](https://github.com/JustinBeckwith/retry-axios/compare/retry-axios-v4.0.2...retry-axios-v4.0.3) (2026-04-11)
 
 
