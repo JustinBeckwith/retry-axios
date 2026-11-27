@@ -151,6 +151,8 @@ const res = await axios({
 
 ### Backoff Types and Timing
 
+By default, a `Retry-After` response header overrides the backoff delay. Zero seconds or an HTTP date at or before the current time retries immediately. Invalid values or delays above `maxRetryAfter` (5 minutes by default) stop the retry. Set `checkRetryAfter: false` to use the configured backoff instead.
+
 The `backoffType` option controls how delays between retry attempts are calculated. There are three strategies available:
 
 #### Exponential Backoff (default)

@@ -84,6 +84,7 @@ export interface RetryConfig {
 
 	/**
 	 * Whether to check for 'Retry-After' header in response and use value as delay. Defaults to true.
+	 * Zero seconds and dates in the past retry immediately.
 	 */
 	checkRetryAfter?: boolean;
 
@@ -217,7 +218,7 @@ function parseRetryAfter(header: string): number | undefined {
 	// Or HTTP date time string
 	const dateTime = Date.parse(header);
 	if (!Number.isNaN(dateTime)) {
-		return dateTime - Date.now();
+		return Math.max(0, dateTime - Date.now());
 	}
 
 	return undefined;
@@ -287,7 +288,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 
 	// Create a promise that invokes the retry after the backOffDelay
 	const onBackoffPromise = new Promise((resolve, reject) => {
-		let delay = 0;
+		let delay: number | undefined;
 		// If enabled, check for 'Retry-After' header in response to use as delay
 		if (
 			config.checkRetryAfter &&
@@ -297,8 +298,9 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 				axiosError.response.headers['retry-after'] as string,
 			);
 			if (
-				retryAfter &&
-				retryAfter > 0 &&
+				retryAfter !== undefined &&
+				Number.isFinite(retryAfter) &&
+				retryAfter >= 0 &&
 				retryAfter <= (config.maxRetryAfter ?? 0)
 			) {
 				delay = retryAfter;
@@ -338,7 +340,7 @@ async function onError(instance: AxiosInstance, error: AxiosError) {
 
 		// Calculate delay according to chosen strategy
 		// Default to exponential backoff - formula: ((2^c - 1) / 2) * retryDelay
-		if (delay === 0) {
+		if (delay === undefined) {
 			// Was not set by Retry-After logic
 			if (config.backoffType === 'linear') {
 				// The delay between the first (actual) attempt and the first retry
